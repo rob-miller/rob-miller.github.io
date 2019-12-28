@@ -24,8 +24,8 @@ h1 {
     font-family:'Helvetica', 'Arial', 'Sans-Serif';
 }
 p {
-    font-size: 1.5em;
-    line-height: 1.4em;
+    font-size: 1.2em;
+    line-height: 1.0;
     color: #333;
 }
 footer {
@@ -38,13 +38,13 @@ p.warn {
 }
 
 ul {
-    font-size: 1.5em;
+    font-size: 1.2em;
 }
 
 
 .post ul { 
     margin: 20px auto 40px; 
-    font-size: 1.5em;
+    font-size: 1.2em;
 }
 
 .post li {
@@ -57,17 +57,17 @@ img {
     max-height:100%;
 }
 
-table {
+.post table {
   border-collapse: collapse;
 }
 
-table, th, td {
+.post table, th, td {
   table-layout: auto;
   padding-left: 16px;
   padding-right: 16px;
   padding-top: 8px;
   padding-bottom: 8px;
-  font-size: 1.4em;
+  font-size: 1.0;
     border: 1px solid black;
 }
 
