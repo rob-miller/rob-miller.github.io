@@ -33,11 +33,41 @@ footer {
     font-size: .8em;
 }
 
-ul.posts { 
+p.warn {
+    color: red;
+}
+
+ul {
+    font-size: 1.5em;
+}
+
+
+.post ul { 
     margin: 20px auto 40px; 
     font-size: 1.5em;
 }
 
-ul.posts li {
-    list-style: none;
+.post li {
+    margin: 10px;
 }
+
+img {
+    max-width:100%;
+    height:auto;
+    max-height:100%;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  table-layout: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  font-size: 1.4em;
+    border: 1px solid black;
+}
+
