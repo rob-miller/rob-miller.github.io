@@ -1,0 +1,32 @@
+Great News!!!! I found the issue and now have 3d acceleration at 1600x1200. The key all along was the Horizontal Sync Rate. After days of searching and studying, this is what works. In your xorg.conf file, make sure the following sections look like this:
+
+Section "Device"
+Identifier "NVIDIA Corporation NV17 [GeForce4 440 Go]"
+Driver "nvidia"
+BusID "AGP:1:0:0"
+VideoRam 65536
+Option "IgnoreEDID" "true"
+Option "NoLogo"
+Option "NvAGP" "1"
+Option "PowerSaverHsyncOn"
+Option "Mobile" "2"
+Option "NoBandWidthTest" #Don't know if it has any effect
+
+EndSection
+
+Section "Monitor"
+Identifier "Toshiba"
+# Option "DPMS"
+HorizSync 75
+VertRefresh 60
+#This modeline and the refresh rates above are the key!!
+Modeline "1600x1200" 160.96 1600 1704 1880 2160 1200 1201 1204 1242 -HSync -Vsync
+
+EndSection
+
+
+
+Oh, and a correction for the search engines....This is on a Toshiba Satellite 5105-s701 laptop.
+
+
+Good luck to everyone else out there running the same hardware!

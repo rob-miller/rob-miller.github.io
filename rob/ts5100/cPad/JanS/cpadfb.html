@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>Synaptics cPad Linux driver for kernel 2.6</title>
+</head>
+<body>
+<h1>Put a frame buffer on the cPad</h1>
+To get a frame buffer on the cPad you need the <a href="vfb2-0.1.tar.bz2">vfb2 kernel module</a> (this module can be used to create frame buffers for USB displays). To install it, do:<br>
+<pre>	make
+	make install
+	depmod -a</pre>
+Additionally the application <a href="cpadfb-0.1.tar.bz2">cpadfb</a> is needed to make a link between the vfb2 module and the cPad character device. To compile it, simply run make. You can then put a frame buffer on the cPad with:
+<pre>	modprobe vfb2_user
+	./cpadfb</pre>
+Because most applications do not like frame buffers with 1 bpp, cpadfb emulates a 24 bpp frame buffer. Framerate, brightness, etc can be set with command line options of cpadfb.<br>
+If you have a kernel &gt;= 2.6.9 and CONFIG_FRAMEBUFFER_CONSOLE, but no frame buffer on your primary display, then the console accepts no input any more after cpadfb started. I recommend to have vesafb and console framebuffer support build into the kernel, and to enable vesafb with a boot option like vga=0x301 (see linux/Documentation/fb/vesafb.txt for details), or to disable console framebuffer support.
+
+<h2>Playing movies</h2>
+<pre>	mplayer -vo fbdev -fb /dev/fb1 -vf scale=240:160 &lt;file&gt;</pre>
+
+<h2>Running XFree86</h2>
+	You just need the following lines in the driver section of your
+	XF86Config file:
+<pre>	Driver		"fbdev"
+	Option		"fbdev"	"/dev/fb1"</pre>
+
+<h2>Map a tty to the frame buffer</h2>
+	Some programs need a tty on the frame buffer to run correctly. You need
+	the program
+	<a href="ftp://platan.vc.cvut.cz/pub/linux/matrox-latest/con2fb.c.gz">con2fb</a>
+	to map a tty to a frame buffer device.
+	You can also use <a href="ftp://ftp.debian.org/debian/pool/main/f/fbgetty/">fbgetty</a>,
+	wich gives you a login prompt automatically.
+	Example: Do 'fbgetty /dev/tty9 /dev/fb1', then press &lt;ALT&gt;+&lt;F9&gt; and you
+	should be able to login.
+
+<h2>Other Software for frame buffer devices</h2>
+	<a href="http://linux-fbdev.sourceforge.net">http://linux-fbdev.sourceforge.net</a>
+
+<h2>Kernel configuration for vfb2</h2>
+If you want a frame buffer on the cPad, you need:
+<pre>	CONFIG_FB and CONFIG_FB_VESA: y
+		Device Drivers ---&gt;
+		    Graphics support ---&gt;
+			Support for frame buffer devices
+			VESA VGA graphics support</pre>
+Mapping a tty on the frame buffer needs this kernel option:
+<pre>	CONFIG_FRAMEBUFFER_CONSOLE: y/m
+		Device Drivers ---&gt;
+		    Graphics support ---&gt;
+			Console display driver support ---&gt;
+			    Framebuffer Console support</pre>
+
+<h2>Bug</h2>
+<li>If you have a kernel &gt;= 2.6.9 and CONFIG_FRAMEBUFFER_CONSOLE, but no frame buffer on your primary display, then the console accepts no input any more after cpadfb started.
+
+<hr>E-Mail: <a href="mailto:jan.steinhoff@uni-jena.de">jan.steinhoff@uni-jena.de</a>
+</body>
+</html>

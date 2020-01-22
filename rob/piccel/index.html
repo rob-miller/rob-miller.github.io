@@ -1,0 +1,234 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Rob Miller">
+   <title>piccel home page</title>
+</head>
+<body>
+
+<hr>
+<center><b><font size=+2>piccel - icc profile editor for linux </font></b></center>
+<center>rob miller -- rob at janerob dot com </center>
+<br>
+
+this is primarily an effort to port Eddie Matejowsky's <a
+href="http://www.eddiem.com/photo/labwarp/labwarp.html">LabWarp</a> to
+linux.  you should have a good read through that page, not least
+because there's very little explanation of the whats or whys of icc
+color profiles here.
+<p>
+<b>screenshots:</b>
+<p>
+
+<img src="piccel-main.jpg" alt="piccel main window">
+<p>
+main window
+<p>
+<img src="piccel-edit.jpg" alt="piccel edit window">
+<p>
+edit window, showing b2a0 clut tab
+<p>
+<img src="piccel-build.jpg" alt="piccel build window">
+<p>
+build window, where parameters are specified to build a CLUT.
+<p>
+<b>overview:</b>
+<p>
+As the acronym is mangled ('Profile ICC Editor Linux') it is perhaps
+accurate that this is more of a 'mangler' than an editor, at least in
+its current incarnation.
+<p>
+in addition to being a port of <a
+href="http://www.eddiem.com/photo/labwarp/labwarp.html">LabWarp</a>, it is also something of a gui
+for <a href="http://www.littlecms.com">little cms</a>.  
+<p>
+sadly, this software currently (and perhaps always) is incapable of
+actually importing a profile and modifying its LUTs slightly and
+saving them.  what it does instead is import the structure of a color
+profile and support the generation of new LUTs within it based on
+input parameters which you can control.  if your existing profile is
+'almost there', this may not help much; if you want to start with a
+standard profile and do some cycles of test-modify-test, this will
+help you. 
+<p>
+currently this only builds 3x3 rgb cluts; probably it can be used to
+inspect other profiles without difficulty.
+<p>
+labwarp and its linux port piccel create cluts by generating a 3x3 clut in lab
+space, modified according to the spinwheel settings in the build
+window, then converted to xyz and then rgb spaces.  in attempting to
+work backwards from the rgb values in a profile clut to the spinwheel
+settings, the first problem is that the xyz<->rgb transform is not
+sufficiently reversible in my hands to get the original values back out.
+<p>
+be advised that the curve adjustments rely on gnome curve widgets, and
+they're really not adequate for the level of control desired to properly
+work on the various input and output curves of a color profile; in
+particular, they don't return the data submitted to them even without
+modification.  despite this, I have left them in as a learning tool to
+provide a means to see what the effect is of changing the various
+curves within a  profile. 
+<p>
+<b>usage:</b>
+<p>
+the normal steps I progress through are:
+<ul>
+<li>
+start up and load an output profile if the piccel.init default is not
+desired
+</li>
+<li>
+click 'edit' in the output profile pane
+</li>
+<li>
+click the BtoA tab, and within that the BtoA0 and CLUT tabs
+</li>
+<li>
+click the 'rebuild' button
+</li>
+<li>
+modify the spinwheel settings if desired; click 'build'
+</li>
+<li>
+click 'update' in the edit window; when the button returns to normal
+state the proofed image on the right side of the main window will have
+updated.  the clut slice view does not update, but the data has
+changed as will be seen if you cover and re-expose the window or cycle
+through the clut slices with the spinwheel next to the 'rebuild'
+button'
+</li>
+</ul>
+<p>
+hopefully most of the gui is self explanatory, however some knowledge
+of the 'update' and 'save as' functionality is probably necessary:
+<p>
+'save as' will output the current working profile to a named file with
+any curve and text tag modifications as shown in the gui, plus the
+*last modified* LUT.  the point to note is that if you go through and
+modify several luts, unless you save and reload each time your 'save
+as' result will only incorporate the last modified LUT.
+<p>
+'update' essentially saves the profile and last generated LUT to a
+temp file and then loads it back in (plus updates the profiled image
+in the main window).
+<p>
+the upshot therefore is that if you want to change multiple LUTs in a
+profile, just click 'update' as you develop each one.  at the end,
+click 'save as' and the resulting profile will contain all the
+changes.
+<p>
+in reality, probably b2a0 is the only lut you will wish to modify.
+<p>
+only changes actually cause updates in a profile, unchanged portions
+are just copied over from the source profile.
+<p>
+there are probably many bugs and problems; I've only really worked on
+it to be able to work on b2a0 cluts and modify some of the text tags.
+<p>
+<b>building:</b>
+<p>
+I built this initially using glade and later anjuta, though now I
+pretty much just use emacs.  presumably building it requires standard
+gnome libraries and lcms, but I haven't done any testing to determine
+the minimum dependendcy set.  my development system runs gentoo linux,
+and I believe that installing glade and anjuta should bring everything
+in that's needed to buid piccel.
+<p>
+given appropriate dependencies, just do <i>./configure</i> and
+<i>make</i>.  this will create <i>src/piccel</i>.
+<p>
+<b>future:</b>
+<p>
+Eddie's page indicates that he threw this together in about two weeks
+of spare time; I've probably put at least four weeks into it, but
+that's been spread over two years of real time.  my main goal recently
+has been to pull it together to its current minimal state of
+'finished' in a big effort to close off a series of projects, so its
+not really clear how much time or commitment I'll be putting into it
+from here - perhaps that depends on you.
+<p>
+its pretty clear to me that linux needs continued integration of color
+management to make things right at least for the photo-geeks and image
+professionals.  cinepaint, gimp and the others are moving in the right
+direction, but it seems like the options for getting profiles to start
+with under linux are very limited.  <a
+href="http://www.argyllcms.com/">argyll</a> is probably the best (and
+only) option for much of it, but with limited hardware (a scanner) the
+results still need help.  
+<p>
+when I first played with labwarp under wine it came close, but crashed
+when I tried to load the higher quality 'ultra' argyll profiles.  now
+I've surmounted this issue, but indeed what's really needed is a
+system to tweek an existing profile rather than the complete rebuild
+of cluts that the current piccel provides.
+<p>
+I don't as yet have the understanding of icc profiles or their
+underlying mathematics to be able to do this, but perhaps the next
+step will be some integration or absorption of part of the argyll code
+base and/or tools.  if you are interested in helping to move this
+forward in some way, please drop me a line.
+<p>
+<b>some questions:</b>
+<p>
+<ul>
+<li>
+what mathematics can I use for the desired task of reading in a
+profile, modifying it in some rational way ('make the green less
+bright') and then write it back out again?
+</li>
+<li>
+how should/does/would an output profile created in a system like this,
+to map colors so that they come out of a printer correctly, be set up
+to 'run backwards' and actually give a proof of how the image will
+look coming out of the printer?  the whole point of the profile is
+that e.g. 'greens are too bright' when printed; how/where is that
+captured?
+</li>
+<li>
+similarly, how is the gamut of the output limited in piccel?  in what
+ways can it be set to reflect different inks?
+</li>
+<li>
+why are the profiles generated with lcms library calls larger than the
+input profiles, even when nothing is changed?  argyll's dumpicc
+reports the contents as (essentially) the same
+</li>
+</ul>
+<p>
+<b>downloads:</b>
+<p>
+<a href="piccel-0.2.tar.bz2">piccel-0.2.tar.bz2</a> source code
+distribution, including an argyll profile and jpg image automatically
+loaded by include <i>piccel.init</i> file.
+<p>
+<a href="profiles.tar.bz2">profiles.tar.bz2</a>a few profiles I've
+created, with argyll or lcms (lprof).  the profile included in the
+source distribution above is really poor, have a play with the 'high'
+or 'ultra' profiles in this set to see something that (almost?) works.
+<p>
+
+<br>
+<br>
+25 march 2007
+<hr>
+<div id="adsense1">
+<center><p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-1801987312954275";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel ="";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</p></center>
+</div>
+
+
+
+</body>
+</html>

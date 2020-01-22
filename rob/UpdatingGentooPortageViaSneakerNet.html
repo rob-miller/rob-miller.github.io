@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Updating Gentoo Portage via SneakerNet</title>
+  <meta name="Keywords"
+ content="gentoo emerge without network, portage update without network">
+</head>
+<body>
+<br>
+I like Gentoo, but it really wants a broadband internet
+connection.&nbsp; If your install doesn't have that luxury, but you
+have access to a machine that does, here's a way to get the files you
+need to update with.&nbsp; If you don't want the'world' of updates,
+work with the second form of the <span style="font-style: italic;">emerge</span>
+command below.<br>
+<br>
+<br>
+Go to <a href="http://gentoo.osuosl.org/snapshots">http://gentoo.osuosl.org/snapshots</a>
+and get portage-latest.tar.bz2 (21mb at time of this writing - so yes,
+you likely need two trips to the internet connection)<br>
+<br>
+<span style="font-weight: bold;">tar xjf portage-latest.tar.bz2</span>
+from /usr, so it overwrites /usr/portage.&nbsp; This will not delete
+files like 'emerge sync' does, so when you go to build you may find
+'security violation' complaints about files in ebuild directories not
+in the manifest.&nbsp; Note that, with a 33.6 connection a few hours
+after getting the portage-latest file, an 'emerge sync' took (only) 18
+minutes including the time to update the portage cache.<br>
+<br>
+<span style="font-weight: bold;">emerge -puDv world</span> or whatever
+target you like, fix any blockages reported and make note of any 'F'
+ebuilds which you will have to download manually.&nbsp; Take note of
+the "Total size of downloads: " line at the end so you are
+prepared.&nbsp; If you have a dialup connection and it says it will
+update portage, might as well do this now as it is not too big.&nbsp; <br>
+<br>
+<span style="font-weight: bold;">emerge -puDf world 2&gt;&amp;1 &gt;
+/dev/null | sed -e 's/ /\n/g' &gt; toget.lst</span> to generate the
+list of files to download<br>
+<br>
+<span style="font-weight: bold;">emerge -pf <span
+ style="font-style: italic;">package</span> 2&gt;&amp;1 &gt; /dev/null
+| sed -e 's/ /\n/g' &gt;&gt; toget.lst</span> to add any additional <span
+ style="font-style: italic;">package</span>s you'll want to install<br>
+<br>
+put <span style="font-weight: bold;">toget.lst</span> on a portable
+storage device (usb hard drive, flash memory, whatever your plan is),
+and take it to your internet connection.&nbsp; You may wish to add <a
+ href="http://xoomer.virgilio.it/hherold/">Heiko Herold's windows wget</a>
+if you're stuck on the dark side.<br>
+<br>
+<span style="font-weight: bold;">wget -i toget.lst -nc -nd</span> in
+the dir you want the files to appear should do it from there.&nbsp; The
+options are :&nbsp; <br>
+<ul>
+  <li><span style="font-weight: bold;">-i</span> : read the urls from
+the specified file</li>
+  <li><span style="font-weight: bold;">-nc</span> :&nbsp; no-clobber;
+the toget.lst file lists many mirrors for most files to download, this
+way it will ignore them if it has the file already.&nbsp; <span
+ style="font-weight: bold;">problem:</span>&nbsp; if a download breaks
+part way through, it won't be detected, and the file will not be
+completed.&nbsp; the alternative is to use -N, but this requires
+getting a file listing from each ftp mirror site (about 1.5mb for
+portage/distfiles).</li>
+  <li><span style="font-weight: bold;">-nd</span> : no directory
+structure - otherwise it will create full dir trees for each mirror
+site, leading to redundant file downloads and a headache finding all
+the target files on the leaves.</li>
+</ul>
+Finally, copy the downloaded files from your storage device to
+/usr/portage/distfiles and run the <span style="font-weight: bold;">emerge
+-uD world</span> or <span style="font-weight: bold;">emerge <span
+ style="font-style: italic;">package</span></span> command as needed.<br>
+<br>
+</body>
+</html>

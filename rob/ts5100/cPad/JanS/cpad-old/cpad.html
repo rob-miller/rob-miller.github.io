@@ -1,0 +1,225 @@
+<html>
+<head>
+<title>Synaptics cPad Linux driver for kernel 2.6</title>
+</head>
+<body>
+<h1>Synaptics cPad Linux driver for kernel 2.6</h1>
+Latest: <a href="cpad26-0.9-3.tar.bz2">cpad26-0.9-3.tar.bz2</a><br>
+The cPad is an USB touchpad with background display (240x160 mono). If you
+don't want to use the display, you do not need this driver. The cPad emulates
+an USB mouse by default, so you can use the usbhid kernel module. But you
+will be able to use
+<a href="http://w1.894.telia.com/~u89404340/touchpad/">Synaptics TouchPad driver for XFree86</a>
+in combination with this kernel module, which will greatly improve mouse
+movement. The Display can be accessed via a frame buffer device and via a
+character device. A driver for kernel 2.4 is available at
+<a href="http://www.janerob.com/rob/ts5100/cPad/index.shtml">Rob Miller's page</a>.
+
+
+<h2>cPad and Debian</h2>
+Ron Lee works on Debian packages for the cPad. The kernel modules are already available, user space programs maybe follow soon :-)
+
+
+<h2>Problems with usbhid.ko</h2>
+The conflict with usbhid.ko has been solved by Ron and me in the latest release. But if you have more than one cPad, you will still need to <a href="cpad-kpatch.html">patch the kernel</a> ;)
+
+
+<h2>Installation</h2>
+The sources of your kernel must be installed and configured.
+
+<h3>Configuring the kernel</h3>
+At least, you need USB support in the kernel:
+<pre>	CONFIG_USB: y/m
+		Device Drivers ---&gt;
+		    USB support ---&gt;
+			Support for Host-side USB</pre>
+USB will only work, if you have the right driver(s) for your USB host controller. My Toshiba Laptop
+needs both the EHCI and the OHCI driver. If unsure, just select all:
+<pre>	CONFIG_USB_EHCI_HCD and/or CONFIG_USB_OHCI_HCD and/or CONFIG_USB_UHCI_HCD: y/m
+		Device Drivers ---&gt;
+		    USB support ---&gt;
+			EHCI HCD (USB 2.0) support
+			OHCI HCD support
+			UHCI HCD (most Intel and VIA) support</pre>
+<a href="http://w1.894.telia.com/~u89404340/touchpad/">Synaptics TouchPad driver for XFree86</a>
+needs an evdev interface:
+<pre>	CONFIG_INPUT_EVDEV: y/m
+		Device Drivers ---&gt;
+		    Input device support ---&gt;
+			Event interface</pre>
+If you want to use the procfs interface, you also need this:
+<pre>	CONFIG_PROC_FS: y
+		File systems ---&gt;
+		    Pseudo filesystems ---&gt;
+			/proc file system support</pre>
+If you want to use the frame buffer you need:
+<pre>	CONFIG_FB and CONFIG_FB_VESA: y
+		Device Drivers ---&gt;
+		    Graphics support ---&gt;
+			Support for frame buffer devices
+			VESA VGA graphics support</pre>
+Mapping a tty on the frame buffer needs this kernel option:
+<pre>	CONFIG_FRAMEBUFFER_CONSOLE: y/m
+		Device Drivers ---&gt;
+		    Graphics support ---&gt;
+			Console display driver support ---&gt;
+			    Framebuffer Console support</pre>
+
+<h3>Installing the cpad kernel module</h3>
+	To compile the module, run:
+	<pre>	make</pre>
+	To install the module, run:
+	<pre>	make install
+	depmod -a</pre>
+
+
+<h2>Synaptics TouchPad driver for XFree86</h2>
+To enable features like tap-to-click, vertical/horizontal scrolling, multifinger
+taps, etc you need
+<a href="http://w1.894.telia.com/~u89404340/touchpad/">Synaptics TouchPad driver for XFree86</a>
+version &gt;= 0.13.3 in addition to this kernel module.
+
+<h2>Programs for the cPad character device</h2>
+If you want to flash the backlight and display nice pictures on the cPad, then
+the program usr_cpad is the best choice. It is included in the tarball of the
+kernel 2.4 driver, available at
+<a href="http://www.janerob.com/rob/ts5100/cPad/index.shtml">Rob Miller's page</a>.
+There is also a gallery with examples, scripts ...<br>
+I have written the tool <a href="cpadconsole.html">cpadconsole</a>, which can help developing
+programs for the character device.
+
+
+<h2>Using the procfs interface</h2>
+The files /proc/driver/cpad/* show some information about the cPad.
+
+<h3>Flashing the backlight</h3>
+<pre>	echo "flash:&lt;time in 10ms&gt;" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Enabling the frame buffer (disabled by default)</h3>
+<pre>	echo "framerate:&lt;rate&gt;" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Disabling the frame buffer</h3>
+<pre>	echo "framerate:0" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Frame buffer dithering mode (default is 3; only in 24 bpp mode)</h3>
+<pre>	echo "dithering:&lt;number from 0 to 3&gt;" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Frame buffer brightness (default is 200; only in 24 bpp mode)</h3>
+<pre>	echo "brightness:&lt;number from 0 to 10000&gt;" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Invert black and white</h3>
+<pre>	echo "invert:1" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Send only changed image lines</h3>
+<pre>	echo "onlychanged:1" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Update only visible part of cPad memory (only in 1 bpp mode)</h3>
+<pre>	echo "onlyvisible:1" &gt; /proc/driver/cpad/0</pre>
+
+<h3>Draw only one frame</h3>
+<pre>	echo "oneframe" &gt; /proc/driver/cpad/0</pre>
+
+
+<h2>Using the frame buffer device</h2>
+The frame buffer is disabled by default. You can enable it with
+<pre>	echo "framerate:30" &gt; /proc/driver/cpad/0</pre>
+The following examples assume that your primary display is /dev/fb0, so your 
+touchpad is the second frame buffer device /dev/fb1. If you don't use vesafb or
+any other frame buffer, then your cPad will be /dev/fb0.
+
+<h3>Emulate 24 bpp</h3>
+	Most applications do not like frame buffers with 1 bpp. The cPad frame
+	buffer can emulate 24 bpp. You can switch to 24 bpp with fbset:
+<pre>	fbset -fb /dev/fb1 -depth 24</pre>
+	All examples below need 24 bpp.
+
+<h3>Playing movies</h3>
+<pre>	mplayer -vo fbdev -fb /dev/fb1 -vf scale=240:160 &lt;file&gt;</pre>
+
+<h3>Running XFree86</h3>
+	You just need the following lines in the driver section of your
+	XF86Config file:
+<pre>	Driver		"fbdev"
+	Option		"fbdev"	"/dev/fb1"</pre>
+
+<h3>Map a tty to the frame buffer</h3>
+	Some programs need a tty on the frame buffer to run correctly. You need
+	the program
+	<a href="ftp://platan.vc.cvut.cz/pub/linux/matrox-latest/con2fb.c.gz">con2fb</a>
+	to map a tty to a frame buffer device.
+	You can also use <a href="ftp://ftp.debian.org/debian/pool/main/f/fbgetty/">fbgetty</a>,
+	wich gives you a login prompt automatically.
+	Example: Do 'fbgetty /dev/tty9 /dev/fb1', then press &lt;ALT&gt;+&lt;F9&gt; and you
+	should be able to login. It looks better if you invert the screen with:
+<pre>	echo "invert:1" > /proc/driver/cpad/0</pre>
+
+<h3>Other Software for frame buffer devices</h3>
+	<a href="http://linux-fbdev.sourceforge.net">http://linux-fbdev.sourceforge.net</a>
+
+
+<h2>Module parameters</h2>
+<h3>Disable input devices</h3>
+<pre>	modprobe cpad disable_input=1</pre>
+<h3>Disable character device</h3>
+<pre>	modprobe cpad disable_cdev=1</pre>
+<h3>Disable procfs interface</h3>
+<pre>	modprobe cpad disable_procfs=1</pre>
+<h3>Disable frame buffer</h3>
+<pre>	modprobe cpad disable_fb=1</pre>
+<h3>Set maximum bpp to 1 (saves 108k memory)</h3>
+<pre>	modprobe cpad max_bpp=1</pre>
+
+
+<h2>cPad and udev</h2>
+<a href="http://www.kernel.org/pub/linux/utils/kernel/hotplug/udev.html">Udev</a>
+will replace devfs some day. Udev with its standard configuration creates the
+cPad character device as /dev/cpad0, but it should be /dev/usb/cpad0.
+If you already use udev, you may want to try these config files:<br>
+<a href="cpad.rules">cpad.rules</a><br>
+<a href="cpadsymlinks.sh">cpadsymlinks.sh</a><br><p>
+Copy cpad.rules to /etc/udev/rules.d/ and cpadsymliks.sh to /etc/udev/scripts/.
+cpadsymlinks.sh must be executable. This config files will also create a directory
+/dev/cpad/0/ which contains symlinks to all devices that belong to the cpad.
+
+
+<h2>Bugs</h2>
+<li> With kernel >= 2.6.7 rmmod hangs while the evdev device of the
+cPad (/dev/input/event?) is in use. usbhid.ko seems to have the same
+problem. If you are using Synaptics TouchPad driver for XFree86 and
+do rmmod from xterm, it will hang. Switching to console and then back
+to X helps. This was a bug in the input core, now fixed in kernel 2.6.10.
+
+
+<h2>Changes</h2>
+<a href="cpad26-0.9-3.tar.bz2">version 0.9-3</a>:
+	<li>Some changes in the way this driver gets the cPad from usbhid<br>
+<a href="cpad26-0.9-2.tar.bz2">version 0.9-2</a>:
+	<li>procfs broke in 0.9. Now it works again.<br>
+<a href="cpad26-0.9.tar.bz2">version 0.9</a>:
+	<li>Grab the cPad back from any driver that has already claimed it.
+	Leap ahead a couple of versions to sync with the 2.4 driver, so
+	people upgrading see a more or less monotonic increase in version
+	numbers (and because the Debian build of 0.5 already released with
+	DRIVER_VERSION of v0.8).  Let's aim for v1.0 to be accepted into
+	the mainstream kernel tree.<br>
+<a href="cpad26-0.6.tar.bz2">version 0.6</a>:
+	<li>invert screen now possible in 1 bpp mode too<br>
+<a href="cpad26-0.5.tar.bz2">version 0.5</a>:
+	<li>Replaced deprecated MODULE_PARM and remap_page_range.
+	<li>Merged with the 2.4 package as the cpad-0.8 release.<br>
+<a href="cpad26-0.4.tar.bz2">version 0.4</a>:
+	<li> replaced del_timer_sync with del_timer in interrupt context (bad bug)<br>
+<a href="cpad26-0.3.tar.bz2">version 0.3</a>:
+	<li> replaced interruptible_sleep_on_timeout with wait_event_interruptible_timeout
+	<li> removed some inline's
+	<li> show more information in procfs
+	<li> add support for 1 bpp to frame buffer
+	<li> add ioctl's to frame buffer
+	<li> add oneframe, onlychanged and onlyvisible options to frame buffer<br>
+<a href="cpad26-0.2.tar.bz2">version 0.2</a>:
+	<li> fixed a color to mono conversion bug
+	<li> added a pseudo_palette (needed by virtual terminals)<br>
+<a href="cpad26-0.1.tar.bz2">version 0.1</a>: first release
+<hr>E-Mail: <a href="mailto:jan.steinhoff@uni-jena.de">jan.steinhoff@uni-jena.de</a>
+</body>
+</html>

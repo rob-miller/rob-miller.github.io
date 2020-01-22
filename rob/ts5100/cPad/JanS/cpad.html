@@ -1,0 +1,152 @@
+<html>
+<head>
+<title>Synaptics cPad Linux driver for kernel 2.6</title>
+</head>
+<body>
+<h1>Synaptics cPad Linux driver for kernel 2.6</h1>
+Latest: <a href="cpad-2.6-v1.1.tar.bz2">version 1.1</a><br>
+The cPad is an USB touchpad with background display (240x160 mono). If you
+don't want to use the display, you do not need this driver. The cPad emulates
+an USB mouse by default, so you can use the usbhid kernel module. But you
+will be able to use
+<a href="http://w1.894.telia.com/~u89404340/touchpad/">Synaptics TouchPad driver for XFree86</a>
+in combination with this kernel module, which will greatly improve mouse
+movement. The Display can be accessed via a character device. A driver for kernel 2.4 is available at
+<a href="http://www.janerob.com/rob/ts5100/cPad/index.shtml">Rob Miller's page</a>.<br>
+The older versions of this kernel module included a frame buffer device, which is now split into a second kernel module and a user space program. The procfs interface is gone now, because it was mainly used to control the framebuffer. If you do not like this, you can get the <a href="cpad-old/cpad.html">older version here</a>.
+
+
+<h2>cPad and Debian</h2>
+Ron Lee works on Debian packages for the cPad. The kernel modules are already available, user space programs maybe follow soon :-)
+
+
+<h2>Problems with usbhid.ko</h2>
+The conflict with usbhid.ko has been solved by Ron and me since version 0.9. At module initialisation, the cPad driver takes over the cPad from usbhid. If you hotplug a cPad, then you must maybe initiate another takeover manually with:
+<pre>	echo "1" > /sys/module/cpad/parameters/steal</pre>
+Sometimes at startup the cPad reconnects. If this happens after module initialisation, you will have to initiate a takeover manually too.<br>
+If you have more than one cPad, you will need to <a href="cpad-old/cpad-kpatch.html">patch the kernel</a> (this kernel patch makes sure that usbhid will not handle the cPad any more).
+
+
+<h2>Installation</h2>
+The sources of your kernel must be installed and configured. In most cases the standard configuration of your kernel should already work (maybe you want to skip the next section first).
+
+<h3>Configuring the kernel</h3>
+At least, you need USB support in the kernel:
+<pre>	CONFIG_USB: y/m
+		Device Drivers ---&gt;
+		    USB support ---&gt;
+			Support for Host-side USB</pre>
+USB will only work, if you have the right driver(s) for your USB host controller. My Toshiba Laptop
+needs both the EHCI and the OHCI driver. If unsure, just select all:
+<pre>	CONFIG_USB_EHCI_HCD and/or CONFIG_USB_OHCI_HCD and/or CONFIG_USB_UHCI_HCD: y/m
+		Device Drivers ---&gt;
+		    USB support ---&gt;
+			EHCI HCD (USB 2.0) support
+			OHCI HCD support
+			UHCI HCD (most Intel and VIA) support</pre>
+<a href="http://w1.894.telia.com/~u89404340/touchpad/">Synaptics TouchPad driver for XFree86</a>
+needs an evdev interface:
+<pre>	CONFIG_INPUT_EVDEV: y/m
+		Device Drivers ---&gt;
+		    Input device support ---&gt;
+			Event interface</pre>
+
+<h3>Installing the cpad kernel module</h3>
+	To compile the module, run:
+	<pre>	make</pre>
+	To install the module, run:
+	<pre>	make install
+	depmod -a</pre>
+
+
+<h2>Synaptics TouchPad driver for XFree86</h2>
+To enable features like tap-to-click, vertical/horizontal scrolling, multifinger
+taps, etc you need
+<a href="http://w1.894.telia.com/~u89404340/touchpad/">Synaptics TouchPad driver for XFree86</a>
+version &gt;= 0.13.3 in addition to this kernel module. The example configuration for /etc/X11/XF86Config that comes with this driver should work fine. Don't forget to check if you have evdev compiled into the kernel or as a module, otherwise it will not work.
+
+
+<h2>Programs for the cPad character device</h2>
+If you want to flash the backlight and display nice pictures on the cPad, then
+the program usr_cpad is the best choice. It is included in the tarball of the
+kernel 2.4 driver, available at
+<a href="http://www.janerob.com/rob/ts5100/cPad/index.shtml">Rob Miller's page</a>.
+There is also a gallery with examples, scripts ... Here is a slightly <a href="usr_cpad-mod.tar.bz2">modified version of usr_cpad</a>, which can send the images a bit faster.<br>
+Ron Lee has updated his <a href="http://people.debian.org/~ron/toshtoys">cpad-mux debian packages</a>. It is still work in progress, but a calculator already works!<br>
+With <a href="cpadfb.html">cpadfb</a> you can put a frame buffer on the cPad.<br>
+The tool <a href="cpadconsole.html">cpadconsole</a> can help developing
+programs for the character device.
+
+
+<h2>cPad and udev</h2>
+<a href="http://www.kernel.org/pub/linux/utils/kernel/hotplug/udev.html">Udev</a>
+will replace devfs some day. Udev with its standard configuration creates the
+cPad character device as /dev/cpad0, but it should be /dev/usb/cpad0.
+If you already use udev, you may want to use these config files:<br>
+<a href="cpad.rules">cpad.rules</a><br>
+<a href="cpadsymlinks.sh">cpadsymlinks.sh</a><br><p>
+Copy cpad.rules to /etc/udev/rules.d/ and cpadsymliks.sh to /etc/udev/scripts/.
+cpadsymlinks.sh must be executable. This config files will also create a directory
+/dev/cpad/0/ which contains symlinks to all devices that belong to the cpad.
+
+
+<h2>Module parameters</h2>
+<h3>Calibrate abs finger position</h3>
+If you want to use the /dev/input/ts? (emulates Compaq Touchscreen protocol) device of the cPad, you maybe want to adjust the following values:
+<pre>	modprobe xmin=&lt;value&gt; xmax=&lt;value&gt; ymin=&lt;value&gt; ymax=&lt;value&gt;</pre>
+The default values are:
+<pre>	xmin=1472
+	xmax=5472
+	ymin=1408
+	ymax=4448</pre>
+
+<h3>Let usbhid handle the cpad</h3>
+<pre>	modprobe cpad steal=0</pre>
+
+
+<h2>Bug</h2>
+<li> With kernel >= 2.6.7 rmmod hangs while the evdev device of the
+cPad (/dev/input/event?) is in use. usbhid.ko seems to have the same
+problem. If you are using Synaptics TouchPad driver for XFree86 and
+do rmmod from xterm, it will hang. Switching to console and then back
+to X helps. This was a bug in the input core, now fixed in kernel 2.6.10.
+
+
+<h2>Changes</h2>
+<a href="cpad-2.6-v1.1.tar.bz2">version 1.1</a>:
+	<li>fixed compilation errors for kernel versions &lt; 2.6.10<br>
+<a href="cpad-2.6-v1.0.tar.bz2">version 1.0</a>:
+	<li>the driver has now only an input and a character device, and is based on usb_skeleton.c version 2.0<br>
+<a href="cpad-old/cpad26-0.9-3.tar.bz2">version 0.9-3</a>:
+	<li>Some changes in the way this driver gets the cPad from usbhid<br>
+<a href="cpad-old/cpad26-0.9-2.tar.bz2">version 0.9-2</a>:
+	<li>procfs broke in 0.9. Now it works again.<br>
+<a href="cpad-old/cpad26-0.9.tar.bz2">version 0.9</a>:
+	<li>Grab the cPad back from any driver that has already claimed it.
+	Leap ahead a couple of versions to sync with the 2.4 driver, so
+	people upgrading see a more or less monotonic increase in version
+	numbers (and because the Debian build of 0.5 already released with
+	DRIVER_VERSION of v0.8).  Let's aim for v1.0 to be accepted into
+	the mainstream kernel tree.<br>
+<a href="cpad-old/cpad26-0.6.tar.bz2">version 0.6</a>:
+	<li>invert screen now possible in 1 bpp mode too<br>
+<a href="cpad-old/cpad26-0.5.tar.bz2">version 0.5</a>:
+	<li>Replaced deprecated MODULE_PARM and remap_page_range.
+	<li>Merged with the 2.4 package as the cpad-0.8 release.<br>
+<a href="cpad-old/cpad26-0.4.tar.bz2">version 0.4</a>:
+	<li> replaced del_timer_sync with del_timer in interrupt context (bad bug)<br>
+<a href="cpad-old/cpad26-0.3.tar.bz2">version 0.3</a>:
+	<li> replaced interruptible_sleep_on_timeout with wait_event_interruptible_timeout
+	<li> removed some inline's
+	<li> show more information in procfs
+	<li> add support for 1 bpp to frame buffer
+	<li> add ioctl's to frame buffer
+	<li> add oneframe, onlychanged and onlyvisible options to frame buffer<br>
+<a href="cpad-old/cpad26-0.2.tar.bz2">version 0.2</a>:
+	<li> fixed a color to mono conversion bug
+	<li> added a pseudo_palette (needed by virtual terminals)<br>
+<a href="cpad-old/cpad26-0.1.tar.bz2">version 0.1</a>: first release
+
+<hr>E-Mail: <a href="mailto:jan.steinhoff@uni-jena.de">jan.steinhoff@uni-jena.de</a>
+</body>
+</html>

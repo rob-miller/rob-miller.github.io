@@ -1,0 +1,11 @@
+#!/bin/sh
+rm /tmp/cons
+fgconsole 1>/tmp/cons 2>/dev/null
+chvt 9
+dumpkeys >/tmp/keymap
+cat /tmp/keymap | sed -e 's/Console_/F/g' > /tmp/keymap2
+loadkeys /tmp/keymap2
+#vlock -a 
+echo "lcd_out: 0" > /proc/acpi/toshiba/video
+
+

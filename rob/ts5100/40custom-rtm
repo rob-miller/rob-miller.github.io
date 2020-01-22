@@ -1,0 +1,18 @@
+
+SYSMODMAP=/etc/X11/Xmodmap
+
+if [ -x /usr/bin/X11/xkbset ]; then
+   xkbset m
+   xkbset exp =m
+   xkbset sl 5
+   xkbset exp =sl
+   xkbset -f slowaccept
+   xkbset exp =f =slowaccept
+fi
+
+if [ -x /usr/bin/X11/xmodmap ]; then
+   if [ -f $SYSMODMAP ]; then
+      xmodmap $SYSMODMAP
+   fi
+fi
+

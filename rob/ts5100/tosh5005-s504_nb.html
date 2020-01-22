@@ -1,0 +1,324 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.79 [en] (X11; I; SunOS 5.8 sun4u) [Netscape]">
+   <meta name="Keywords" content="toshiba linux, linux satellite 5000-Z59, linux satellite 5005-S504, linux satellite 5005-S507">
+   <meta name="Author" content="Nicolas Beaulieu">
+   <title>Linux on Toshiba Satellite 5000-Z59 / Satellite 5005-S504 / Satellite 5005-S507 and similar notebooks</title>
+</head>
+<body>
+
+<center><b><font size=+2>Linux on Toshiba Satellite 5000-Z59 / Satellite
+5005-S504 / Satellite 5005-S507</font></b></center>
+
+<p><a href="mailto:gulliver@condorito.org">Nicolas Beaulieu</a>
+<br>April 2002
+<center>
+<hr WIDTH="100%"></center>
+
+<p><b><font size=+2>Contents</font></b>
+<ul>
+<li>
+<a href="#intro">Introduction / Disclaimer</a></li>
+
+<li>
+<a href="#linux">Choice of a linux distribution</a></li>
+
+<li>
+<a href="#acpi">Applying ACPI's patch to kernel</a></li>
+
+<li>
+<a href="#kernel">Kernel configuration</a></li>
+
+<li>
+<a href="#cdrw">CDROM/CDWRITER</a></li>
+
+<li>
+<a href="#floppy">External USB Floppy</a></li>
+
+<li>
+<a href="#x">Making X work</a></li>
+
+<li>
+<a href="#sound">Making sound work</a></li>
+
+<li>
+<a href="#drivers">Using Intel and NVIDIA drivers</a></li>
+
+<li>
+<a href="#remaining">What's remaining</a></li>
+
+<li>
+<a href="#files">Files</a></li>
+</ul>
+
+<p><br><a NAME="intro"></a><b><font size=+2>Introduction/ Dislcaimer</font></b>
+<p>This is how I managed to get linux working on my Toshiba Satellite 5000-Z59.
+The Satellite 5000-Z59 is the Canadian version of&nbsp; the&nbsp; <a href="http://www.csd.toshiba.com/cgi-bin/tais/pc/pc_prodDetail.jsp?BV_SessionID=@@@@0745414565.1020017787@@@@&BV_EngineID=dcadcdlfledflbffkcghcfmgdgli.0&comm=CS&plin=Portable%20Computers&pfam=Satellite&poid=207513&Adoid=164618">Satellite
+5005-S507</a> .&nbsp; You can get complete online specifications on <a href="http://www.toshiba.ca">Toshiba
+Canada</a> to compare with your own specs.&nbsp; If I had knew that I'd
+have to work that hard to have Linux notebook, maybe I'd have chosen an
+other one. (See explanations about the new generation of "legacy free"
+machines on&nbsp; <a href="http://www.mobilix.org/toshiba_s5005_s504.html">Marco
+Trevisani's</a> website.) But too late:&nbsp; I already have it, and because&nbsp;
+I can't live with Windows products, I need to install linux.
+<p>The present guide is the result of a couple of weeks of work, browsing
+<a href="http://rooster.stanford.edu/~ben/toshiba">Ben
+Lynn's</a> and <a href="http://www.mobilix.org/toshiba_s5005_s504.html">Marco
+Trevisani's</a>&nbsp; guide as well as <a href="http://www.topica.com/lists/5005-linux">the
+mailing list</a> devoted to Toshiba Satellite 5000 series. Many thanks
+to both of them and to everyone that provided me useful hints and tips.
+<p>This is not a good looking guide, nor a complete description of each
+and every problems you could have with linux nor a complete description
+of the hardware and its performance. Please refer to the 3 links above
+to get these descriptions.
+<p>It is also assumed that you have basic skills in Linux/UNIX operating
+systems.&nbsp; In any case you will be responsible for any error that should
+occur. Please don't blame me if the result of your "linux experiments"
+is not the same than mine. <b><blink>USE AT YOUR OWN RISK</blink></b>.
+<br>&nbsp;
+<p><a NAME="linux"></a><b><font size=+2>Choice of a linux distribution</font></b>
+<p>I first tried <a href="http://www.redhat.com">RedHat 7.2 Enigma</a>.
+I had no problem at all to install it, configure it, and run it.&nbsp;
+For those of you who want to use it, don't worry. Go for it.&nbsp; I then
+made a switch to <a href="http://www.debian.org">Debian</a>. That was my
+first time trying to use it. I gave a try to the current stable <i>potato
+2.2r6</i>, that comes with kernel 2.2.19. I've never been able to get through
+the total setup process.&nbsp; The first reboot after the initial installation
+step always produces a kernel panic. Same thing in rescue mode.
+<p>I gave up to try <a href="http://www.libranet.com">Libranet</a>, a Debian-based
+distribution partnered with <a href="http://www.sun.com">SUN Microsystems</a>.
+<a href="http://www.libranet.com/download.html">Libranet
+1.9.1</a> is free and recquires only 1 iso/cd. I've been impressed by the
+ease of the installation process. It took me 30 minutes to get "up and
+running".
+<p>The following shows my actual configuration with <a href="http://www.libranet.com/download.html">Libranet
+1.9.1</a>, but most of it also applies to <a href="http://www.redhat.com">RedHat
+7.2 Enigma</a>.&nbsp; Reports of success with <a href="http://www.linux-mandrake.com/en">Mandrake</a>
+and <a href="http://www.suse.com">SuSE</a> can also be found on <a href="http://www.topica.com/lists/5005-linux">the
+mailing list</a>.&nbsp; Right after the installation, I have used <font face="Courier New,Courier">apt-find</font>
+to update the whole system and get rid of&nbsp; things I don't need.
+<br>&nbsp;
+<p><a NAME="acpi"></a><b><font size=+2>Applying ACPI's patch to kernel</font></b>
+<p>Before trying anything else, upgrade to (at least) kernel 2.4.18 and
+patch it with the latest ACPI's patch.&nbsp; <b>As of 05/02, this is a
+necessary step to get sound working.</b>&nbsp; For those of you who don't
+know how achieve this, here it is:
+<p>1- Get kernel 2.4.18 from <a href="ftp://ftp.kernel.org/pub/linux/kernel/v2.4">ftp.kernel.org</a>.
+save it under /usr/src and:
+<p><font face="Courier New,Courier">cd /usr/src</font>
+<br><font face="Courier New,Courier">tar -zxvf linux-2.4.18.tar.gz</font>
+<br><font face="Courier New,Courier">mv linux linux-2.4.18</font>
+<br><font face="Courier New,Courier">ln -s linux-2.4.18 linux</font>
+<br>&nbsp;
+<p>2- Get ACPI's patch "acpi-20020404-2.4.18.diff.gz" (or later) from <a href="ftp://ftp.sourceforge.net/pub/sourceforge/acpi">ftp.sourceforge.net</a>,
+save it in the kernel sources tree (/usr/src/linux) and:
+<p><font face="Courier New,Courier">gunzip acpi-20020404-2.4.18.diff.gz</font>
+<br><font face="Courier New,Courier">patch -p1 &lt; acpi-20020404-2.4.18.diff</font>
+<br>&nbsp;
+<br>&nbsp;
+<p><a NAME="kernel"></a><b><font size=+2>Kernel configuration</font></b>
+<p>You should compile the kernel according to YOUR own settings.&nbsp;
+You can however use my own <a href="config-2.4.18">config file</a>.&nbsp;
+This is a safe one to begin with.
+<p>My advices/tips for the configuration of Satellite 5XXX:
+<br>&nbsp;
+<p>-"Processor type and features": Toshiba Laptop support as module (<font face="Courier New,Courier">CONFIG_TOSHIBA=m)</font>if
+you want to use the "<a href="http://www.buzzard.org.uk/toshiba">toshutils</a>".
+<p>-"General Setup":&nbsp; Support for hot-pluggable devices
+<font face="Courier New,Courier">(CONFIG_HOTPLUG=y)</font>
+if you have external USB devices like mouse, webcam or Digital camera .
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Power Management support <font face="Courier New,Courier">(CONFIG_PM=y)</font>
+to be able to shutdown properly.
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "ACPI Support": Compile everything
+in the kernel (=y)
+<p>-"Plug and Play configuration": You don't need it.
+<p>-"ATA/IDE/MFM/RLL support&nbsp; AND&nbsp; SCSI support":
+<br>&nbsp;
+<ul>
+<li>
+<a NAME="cdrw"></a>For CDROM and CD Writer: You don't need IDE/ATAPI cdrom
+support because you'll configure it as "ide-scsi" to use the cd writer:</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1- SCSI
+support <font face="Courier New,Courier">(CONFIG_SCSI=m or y) --> scsi_mod.o</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2- SCSI generic support (<font face="Courier New,Courier">CONFIG_CHR_DEV_SG=m
+or y</font>) -->&nbsp; sg.o
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3- SCSI CD-ROM support (<font face="Courier New,Courier">CONFIG_BLK_DEV_SR=m
+or y</font>) --> sr_mod.o
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+4- SCSI emulation support: (<font face="Courier New,Courier">CONFIG_BLK_DEV_IDESCSI=m
+or y</font>) --> ide-scsi.o
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5-
+Create the appropriate link: "<font face="Courier New,Courier">ln -sf /dev/scd0
+/dev/cdrom</font>"&nbsp; and "<font face="Courier New,Courier">ln -sf /dev/scd0
+/dev/dvd</font>"
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+6- Add " append="hdc=ide-scsi" " to your <a href="#files">lilo.conf</a>,
+if you use lilo, and run lilo
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+7- If you compiled it all as modules, to use it:
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <font face="Courier New,Courier">insmod
+scsi_mod</font>
+<br><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod sg</font>
+<br><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod cdrom</font>
+<br><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod sr_mod</font>
+<br><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod ide-scsi</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(mount the device, <a href="#files">see my fstab</a>)
+<ul>
+<li>
+<a NAME="floppy"></a>For External USB Floppy</li>
+</ul>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1- SCSI
+support <font face="Courier New,Courier">(CONFIG_SCSI=m or y) --> scsi_mod.o</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2- From the "USB Support" choose USB Mass Storage support (<font face="Courier New,Courier">CONFIG_USB_STORAGE=m
+or y</font>) --> usb-storage.o
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+3- SCSI Disk support (<font face="Courier New,Courier">CONFIG_BLK_DEV_SD=m
+or y</font>) -->&nbsp; sd_mod.o
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4-
+Create the appropriate link: ln -sf /dev/sda /dev/fd0
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+5- If you compiled it all as modules, to use it:
+<p><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod scsi_mod</font>
+<br><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod sd_mod</font>
+<br><font face="Courier New,Courier">&nbsp;&nbsp;&nbsp;&nbsp; insmod usb-storage</font>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(mount the device, <a href="#files">see my fstab</a>)
+<br>&nbsp;
+<p>-"Network device support":&nbsp; Network device support (<font face="Courier New,Courier">CONFIG_NETDEVICES=m
+or y</font>) if you need the network adapter
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Ethernet
+(10 or 100Mbit)": EtherExpressPro/100 support&nbsp; --> eepro100.o if you
+don't want to use the Intel driver
+<br>&nbsp;
+<p>-"Input core support": Input core support (<font face="Courier New,Courier">CONFIG_INPUT=y</font>)
+if you want to use the touchpad
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Mouse support (<font face="Courier New,Courier">CONFIG_INPUT_MOUSEDEV=y</font>)
+if you want to use the touchpad
+<p>-"File systems": Ext3 journaling file system support=y if you want/need
+to use Ext3 (you should)
+<p>-"USB support": Support for USB=y
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Preliminary USB device filesystem=y (<a href="#files">see my fstab</a>)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+UHCI Alternate Driver (JE) support=y&nbsp; (<font face="Courier New,Courier">CONFIG_USB_UHCI_ALT=y</font>)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+USB Mass Storage support (<font face="Courier New,Courier">CONFIG_USB_STORAGE=m
+or y</font>) --> usb-storage.o for the external floppy
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+USB Human Interface Device (full HID) support=y if you want to use the
+touchpad
+<p>-"Sound": Sound card support (<font face="Courier New,Courier">CONFIG_SOUND=m
+or y</font>) if you need sound (with kernel support or ALSA support)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Intel ICH (i8xx) audio support=y or m if you want to use the kernel support
+<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+OSS sound modules=m or y if you want to use the kernel support
+<br>&nbsp;
+<br>&nbsp;
+<p><a NAME="x"></a><b><font size=+2>Making X work</font></b>
+<p>Like <a href="http://www.mobilix.org/toshiba_s5005_s504.html">Marco
+Trevisani</a> says, "you even have a choice". XFree provides a driver for
+NVIDIA adapters and it works fine.&nbsp; I use the official driver from
+NVIDIA because I noticed that it was faster. It may not be the case for
+everyone though.&nbsp; <a href="#drivers">See below</a> how to get it and
+install it, and my <a href="#files">modules.conf</a>. To use XFree support,
+replace "nvidia" with "nv" in the Device section of my <a href="#files">XF86config-4
+file</a>. I also managed to get TwinView working with my TV. Refer to the
+<a href="#files">XF86config-4</a>
+to see how.
+<br>&nbsp;
+<br>&nbsp;
+<p><a NAME="sound"></a><b><font size=+2>Making sound work</font></b>
+<p>Once again, you have a choice. Provided that you applied the ACPI's
+patch to kernel, you could use the kernel support and OSS compiled in the
+kernel (=y). It works fine and is easy to set up.&nbsp; I use drivers from
+<a href="http://www.alsa-project.org">ALSA</a>&nbsp;
+and it works better. Download alsa-driver, alsa-lib and alsa-utils and
+install.&nbsp; To configure alsa-driver, you should use something like
+"<font face="Courier New,Courier">./configure&nbsp; --with-sequencer=yes&nbsp;
+--with-oss=yes&nbsp; --with-cards=intel8x0</font>".&nbsp; Read the documentation
+from ALSA for the remaining part of the installation process.&nbsp; To
+use this, see my <a href="#files">modules.conf</a>.
+<br>&nbsp;
+<br>&nbsp;
+<p><a NAME="drivers"></a><b><font size=+2>Using Intel and NVIDIA drivers</font></b>
+<br>&nbsp;
+<p>I use NVIDIA's drivers for the GeForce instead of the XFree support
+and Intel's driver for the eepro instead of the kernel support.&nbsp; I
+have to recompile them from the sources after each kernel compilation:
+<br>&nbsp;
+<p>a) Intel
+<p>1- Get Intel's driver to this URL (from <a href="http://rooster.stanford.edu/~ben/toshiba">Ben
+Lynn's</a> website):
+<p><a href="http://downloadfinder.intel.com/scripts-df/Detail_Desc.asp?ProductID=61&DwnldID=2896">http://downloadfinder.intel.com/scripts-df/Detail_Desc.asp?ProductID=61&amp;DwnldID=2896</a>
+<p>2- Save it in /usr/src and:
+<p><font face="Courier New,Courier">tar -zxvf e100*</font>
+<br><font face="Courier New,Courier">cd e100*</font>
+<br><font face="Courier New,Courier">make install</font>
+<br>&nbsp;
+<p>b) NVIDIA
+<p>1- Get NVIDIA_kernel*.tar.gz and NVIDIA_GLX*.tar.gz from NVIDIA's
+<br>support website:
+<p><a href="http://www.nvidia.com/view.asp?PAGE=linux">http://www.nvidia.com/view.asp?PAGE=linux</a>
+<p>2- mkdir /usr/src/nvidia , save both files in that directory and:
+<p><font face="Courier New,Courier">tar -zxvf&nbsp; NVIDIA*.tar.gz</font>
+<br><font face="Courier New,Courier">cd NVIDIA_k*</font>
+<br><font face="Courier New,Courier">make install</font>
+<br><font face="Courier New,Courier">cd ../NVIDIA_G*</font>
+<br><font face="Courier New,Courier">make install</font>
+<br>&nbsp;
+<p><a NAME="remaining"></a><b><font size=+2>What's remaining</font></b>
+<p>&nbsp;&nbsp; - Fn functions / Toshutils
+<br>&nbsp;&nbsp; - playing DVD
+<p>&nbsp;&nbsp; - FireWire (don't need)
+<br>&nbsp;&nbsp; - PCMCIA (don't need)
+<br>&nbsp;&nbsp; - BlueTooth (don't need)
+<br>&nbsp;&nbsp; - IrDA (don't need)
+<br>&nbsp;
+<br>&nbsp;
+<p><a NAME="files"></a><b><font size=+2>Files</font></b>
+<ul>
+<li>
+<a href="XF86Config-4">XF86Config-4</a> file using an external Genius USB
+mouse and NVIDIA's driver. <blink>IMPORTANT</blink>: <a href="XF86Config-4.README">XF86Config-4.README</a></li>
+
+<li>
+<a href="lilo.conf">lilo.conf</a></li>
+
+<li>
+<a href="config-2.4.18">config-2.4.18</a></li>
+
+<li>
+<a href="fstab">fstab</a></li>
+
+<li>
+<a href="dmesg">dmesg</a></li>
+
+<li>
+<a href="lspci">lspci</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Note: The original pci.ids failed to detect properly the harware.&nbsp;
+I now use the latest snapshot from the pci-ids</li>
+
+<li>
+<a href="lspcivv">lspci -vv</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+project (<a href="http://pciids.sourceforge.net">http://pciids.sourceforge.net</a>)</li>
+
+<li>
+<a href="modules.conf">modules.conf</a></li>
+</ul>
+
+<p><br>
+<hr WIDTH="100%">
+<br><a href="mailto:gulliver@condorito.org">Nicolas Beaulieu</a>
+<br>April 2002
+</body>
+</html>

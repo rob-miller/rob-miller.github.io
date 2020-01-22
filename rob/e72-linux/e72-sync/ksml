@@ -1,0 +1,2237 @@
+#!/usr/bin/perl -W
+
+### LICENSE ###
+#LICENSE # copyright (c) 2010 Robert T. Miller all rights reserved
+#LICENSE # permission to copy, modify, use and redistribute without charge granted 
+#LICENSE # so long as lines marked '#LICENSE' are retained in entirety
+### LICENSE ###
+
+# please add your name as a contributor if you redistribute a modified version
+
+## EDIT the 'change these' user settings below first!!!!!!
+
+#
+##  ksml : sync korganizer calendar data with syncml-ds-tool data
+#
+
+#
+# order of operations:
+#
+#  load korg data
+#
+#  if first run
+#   sync phone
+#   if on phone but not korg
+#      conclude was added to phone so add to korg
+#
+#  read phone data  (left in dir from last sync, not current)
+#   if on phone but not korg
+#      conclude was deleted from korg, so delete from phone
+#   if on korg but not phone
+#      conclude was added to korg so add to phone
+#   if on both 
+#      update changes from korg to phone
+#
+#  sync phone
+#
+#  load phone data
+#   if on korg but not phone
+#      conclude was deleted from phone so delete from korg
+#   if on phone but not korg
+#      conclude was added to phone so add to korg
+#   if on both 
+#      update changes from phone to korg
+#
+#  write korg data
+#  
+
+### user settings
+
+### DEFINITELY change these:
+my $korg_src = "/home/USER/.kde4/share/apps/korganizer/std.ics";  # korganizer data
+## may need to add this as a calendar in korganizer
+my $wrk_dir= "/home/USER/.rtm-e72-sync";          # top level working dir
+my $bt_mac= "xx:xx:xx:xx:xx:xx";                 # get from 'sdptool browse'
+
+###
+
+# control
+my $verbose=1;                                   # more messages
+my $dry_run=0;                                   # don't write or sync anything
+my $no_2nd_sync=0;                               # don't sync data back to phone, ok to read
+
+# may need or prefer to change:
+my $ignore_old_korg=1;                           # don't put old korg data on phone
+my $weeks_old=1;                                 #  ignore_old_korg older than ...
+my $rm_not_started_todo=1;                       # remove todos w/ future start from phone (e72 hack)
+my $done_todos_korg_only=1;                      # completed todos not sent to phone or del from korg
+my $purge_phone_todo=1;                          # remove completed todos from phone
+my $cal_dir= "$wrk_dir/calendar";                # sync data to/from phone
+my $cal_bak_dir= "$wrk_dir/old.calendar";        # old entries from phone being deleted
+my $bt_chan= 4;                                  # 'SyncMLClient' channel from sdptool
+my $prodid_str = '-//Nokia//NONSGML rtm-1//EN';  # required by std, but nokia doesn't generate
+
+# should not need to change:
+my $sync_cmd= "syncml-ds-tool -b $bt_mac $bt_chan --sync text/x-vcalendar Calendar $cal_dir --wbxml --identifier \"PC Suite\" --remoteWinsConflicts";
+### end user settings
+
+print "can't find korganizer data file $korg_src\n" if (! -e $korg_src);
+print "can't find snyncml-ds-tool work dir $wrk_dir\n" if (!-d $wrk_dir);
+print "need to set bluetooth mac address: $bt_mac\n" if ($bt_mac eq "xx:xx:xx:xx:xx:xx");
+die "edit user settings at beginning of $0\n" if ((! -d $wrk_dir) 
+						  or (! -e $korg_src)
+						  or ($bt_mac eq "xx:xx:xx:xx:xx:xx"));
+
+use Data::ICal;
+use Data::ICal::Entry;
+use Time::localtime;
+use Time::gmtime;
+use Time::Local;
+
+###global vars
+my $max_phone_entry=0;
+my $dt_old_cutoff="";
+my $dt_last_sync="";
+my $dt_now="";
+my $dt_do_todo="";
+my $dt_bad_sync2="";
+my %phone_mod=();
+my %phone_add=();
+my $CRLF = "\x0d\x0a";
+my $tu;
+### end globals
+
+
+# special warn handler to get rid of complaints about 
+#  -- non-standard Nokia properties aalarm and tz
+# also get warns out of stderr so they appear with log messages during processing
+
+sub filter_known_warnings {
+    $_ = shift;
+    
+    if (/^Unknown property for Data::ICal: tz /) {
+    #} elsif (/^Unknown property for Data::ICal::Entry::Event: aalarm /) {
+    } else {
+	print "caught: $_";
+    }
+
+    return 0;
+};
+
+sub verbose_chk {
+    my $uid = shift;
+
+    return (($verbose and (not defined $tu)) or (defined $tu and $tu eq $uid));
+}
+
+sub printvals {
+    my $vref = shift;
+    my @varr = @{ $vref };
+    foreach my $vhr (@varr) {
+	my %vh = %{ $vhr };
+	my $k = $vh{'key'};
+	my $v = $vh{'value'};
+	print " $k : $v \n";
+    }
+}
+
+sub printprops {
+    my $e = shift;
+
+    my %props = %{$e->properties()};
+    foreach my $p (keys %props) {
+	#print " $p :\n";
+	printvals( $props{$p} );
+    }
+}
+
+sub hasprop {
+    my $entry = shift;
+    my $prop = shift;
+    return undef unless (defined $entry);
+
+    my %eprops = %{$entry->properties()};
+    if (not exists $eprops{$prop}) {
+	return undef;
+    }
+    return 1;
+}
+
+sub get1propval {
+    my $entry = shift;
+    my $prop = shift;
+
+    return undef unless (defined $entry);
+
+    my %eprops = %{$entry->properties()};
+    if (not exists $eprops{$prop}) {
+	#print "no property $prop in ";
+	#foreach my $k (keys %{ $epropsr }) {
+	#    print "$k ";
+	#}
+	#print ".\n";
+	return undef;
+    }
+    my $vref = $eprops{$prop};
+    my @varr = @{ $vref };
+    foreach my $vhr (@varr) {
+	my %vh = %{ $vhr };
+	return $vh{'value'} if ($vh{'key'} eq $prop);
+    }
+
+    return undef;
+}
+
+sub set1propval {
+    my $entry = shift;
+    my $prop = shift;
+    my $newval = shift;
+    my $rslt=undef;
+
+    my $epropsr = $entry->properties();
+    if (not exists $epropsr->{$prop}) {
+	print "no property $prop in ";
+	foreach my $k (keys %{$epropsr}) {
+	    print "$k ";
+	}
+	print ".\n";
+	return undef;
+    }
+    my $vref = $epropsr->{$prop};
+    foreach my $vhr (@{ $vref }) {
+	if ($vhr->{'key'} eq $prop) {
+	    $vhr->{'value'} = $newval;
+	    $rslt=1;
+	}
+    }
+
+    return $rslt;
+}
+    
+
+sub rm_property {
+    my $e = shift;
+    my $prop = shift;
+
+    my $eprops = $e->properties();
+    if (exists $eprops->{$prop}) {
+	delete $eprops->{$prop};
+    #} else {
+	#print "rm_property : $prop doesn't exist on ". summary($e) ."\n";
+    }
+}
+
+sub datestr_secs {
+    my $dstr = shift;
+    my ($yr, $mo, $dy, $hr, $mn, $sc);
+    my $gmt=0;
+
+    if ($dstr =~ /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/) {
+        ($yr, $mo, $dy, $hr, $mn, $sc) = ($1, $2, $3, $4, $5, $6);
+	$gmt = 1;
+    } elsif ($dstr =~ /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/) {
+        ($yr, $mo, $dy, $hr, $mn, $sc) = ($1, $2, $3, $4, $5, $6);
+    } elsif ($dstr =~ /^(\d{4})(\d{2})(\d{2})$/) {
+        ($yr, $mo, $dy, $hr, $mn, $sc) = ($1, $2, $3, 0, 0, 0);
+    } else {
+	print "failed to parse $dstr as ICal date string\n";
+	return undef;
+    }
+
+   $yr -= 1900; $mo--;
+
+    if ($gmt) {
+	return timegm($sc,$mn,$hr,$dy,$mo,$yr);
+    } else {
+	return timelocal($sc,$mn,$hr,$dy,$mo,$yr);
+    }
+}
+
+sub datestr_local_date {
+    my $dstr = shift;
+    my $dsecs = datestr_secs($dstr);
+
+    my $tm = localtime($dsecs);
+
+    my ($sc,$mn,$hr,$dy,$mo,$yr) = ($tm->sec, $tm->min, $tm->hour, $tm->mday, $tm->mon, $tm->year);
+	
+    $yr += 1900; $mo++;
+    my $rstr = sprintf "%4d%02d%02d", $yr,$mo,$dy;
+    
+    return $rstr;
+}
+
+sub datestr_to_gmt {
+    my $dstr = shift;
+
+    return $dstr if $dstr =~ /Z$/;  # looks like gmt already
+
+    my $dsecs = datestr_secs($dstr);
+
+    my $tm = gmtime($dsecs);
+    my ($sc,$mn,$hr,$dy,$mo,$yr) = ($tm->sec, $tm->min, $tm->hour, $tm->mday, $tm->mon, $tm->year);
+	
+    $yr += 1900; $mo++;
+    my $rstr = sprintf "%4d%02d%02dT%02d%02d%02dZ", $yr,$mo,$dy,$hr,$mn,$sc;
+
+    return $rstr;
+}
+
+sub datestr_to_local {
+    my $dstr = shift;
+
+    return $dstr if $dstr =~ /^\d{8}T\d{6}$/;  # looks like localtime already
+
+    my $dsecs = datestr_secs($dstr);
+
+    my $tm = localtime($dsecs);
+
+    my ($sc,$mn,$hr,$dy,$mo,$yr) = ($tm->sec, $tm->min, $tm->hour, $tm->mday, $tm->mon, $tm->year);
+	
+    $yr += 1900; $mo++;
+    my $rstr = sprintf "%4d%02d%02dT%02d%02d%02d", $yr,$mo,$dy,$hr,$mn,$sc;
+
+    return $rstr;
+}
+
+sub datestr_is_0time {
+    my $dstr = shift;
+    
+    if ($dstr =~ /^\d{8}T000000$/) {
+	return 1;
+    } 
+    return 0;
+}
+
+sub printentry {
+    my $e = shift;
+
+    my $et = $e->ical_entry_type();
+    print "$et : \n";
+    print " --- properties: --- \n";
+    printprops( $e );
+    print " --- recurse for entries: --- \n";
+
+    my @entries = @{ $e->entries() };
+    foreach my $e (@entries) {
+	printentry($e);
+    }
+
+    print "--- done with entries --- \n";
+
+    print "\n";
+    print "---------------------- \n";
+    print $e->as_string;
+    print "---------------------- \n";
+}
+
+sub phone_get_entry {
+    my $fno = shift;
+    my $hr = shift;
+
+    print "phone_get_entry called for korg data set \n" unless (exists $hr->{ 'phone' });
+    my $pcal = $hr->{$fno};
+    my $aper = $pcal->entries();
+    
+    return $aper->[0];
+}
+
+sub findUIDentry {
+    my $targ_uid = shift;
+    my $hr = shift;
+
+    #print "search for uid $targ_uid\n";
+
+    if (exists $hr->{ 'phone' }) {
+	#print "searching phone data\n";
+	my @phonekeys = keys %{ $hr };
+	foreach my $k (@phonekeys) {
+	    next if ($k eq 'phone');
+	    my $pcal = $hr->{$k};
+
+	    my @ape = @{ $pcal->entries() };
+	    foreach my $pe (@ape) {
+		my $pe_uid = uid($pe); 
+		#print "? $pe_uid ... ";
+		if ((defined $pe_uid) and ($pe_uid eq $targ_uid)) {
+		    #print "\n";
+		    return $pe ;
+		}
+	    }
+	}
+    } else {
+	my @ake = @{ $hr->entries() };
+	#print "searching korg data\n";
+	foreach my $ke (@ake) {
+	    my $ke_uid = uid($ke); 
+	    #print "? $ke_uid ... ";
+	    if ((defined $ke_uid) and ($ke_uid eq $targ_uid)) {
+		#print "\n";
+		return $ke ;
+	    }
+	}
+    }
+    #print "\n";
+    return 0;
+}
+
+sub findUID_phonekey {
+    my $targ_uid = shift;
+    my $hr = shift;
+
+    #print "search for uid $targ_uid\n";
+
+    if (exists $hr->{ 'phone' }) {
+	#print "searching phone data\n";
+	my @phonekeys = keys %{ $hr };
+	foreach my $k (@phonekeys) {
+	    next if ($k eq 'phone');
+	    my $pcal = $hr->{$k};
+
+	    my @ape = @{ $pcal->entries() };
+	    foreach my $pe (@ape) {
+		my $pe_uid = uid($pe);
+		#print "? $pe_uid ... ";
+		if ((defined $pe_uid) and ($pe_uid eq $targ_uid)) {
+		    #print "\n";
+		    return $k ;
+		}
+	    }
+	}
+    } else {
+	die "findUID_phonekey only for phoneset\n";
+    }
+}
+
+sub printUIDentry {
+    my $uid = shift;
+    my $cal = shift;
+
+    my $e = findUIDentry($uid,$cal);
+    printentry($e) if ($e);
+}
+
+sub printcal {
+    my $calendar = shift;
+    my %proph = %{ $calendar->properties() };
+
+    foreach my $k (keys %proph) {
+	#print "$k : \n";
+	printvals( $proph{$k} );
+    }
+    
+    my @entries = @{ $calendar->entries() };
+    foreach my $e (@entries) {
+	printentry($e);
+    }
+
+    print "\n";
+    #print $calendar->as_string;
+}
+
+sub reportEntries {
+    my $cal = shift;
+    my $hr = shift;
+    my @entries = @{ $cal->entries() };
+
+    foreach my $e (@entries) {
+	my $et = $e->ical_entry_type();
+	if (exists $hr->{$et}) {
+	    $hr->{$et}++;
+	} else {
+	    $hr->{$et} =1;
+	}
+    }
+    return ($#entries +1);
+}
+
+sub summary {
+    my $entry = shift;
+    return get1propval( $entry, 'summary' );
+}
+
+sub uid {
+    my $entry = shift;
+    return get1propval( $entry, 'uid' );
+}
+
+sub older {
+# return true if second arg is later than first
+    my $d1 = shift;
+    my $d2 = shift;
+    $d1 .= "T000000" if ($d1 =~ /^\d{8}}$/);
+    $d2 .= "T000000" if ($d2 =~ /^\d{8}$/);
+    $d1 =~ s/\D//g;
+    $d2 =~ s/\D//g;
+
+    #print "compare $d1 newer or same $d2 \n";
+    return ( $d1 < $d2);
+}
+
+sub newcheck {
+    my $e = shift;
+
+    #print "nc: ". summary($e) ."\n";
+
+    return 1 unless ($ignore_old_korg);
+
+    my $dtend = get1propval($e, 'dtend');
+    #print "nc-dtend: $dt_old_cutoff < $dtend\n";
+    if ((defined $dtend) and ($dtend ne "")) {
+	return (older( $dt_old_cutoff, $dtend ));
+    }
+
+    my $completed = get1propval($e, 'completed');
+    #print "nc-completed: $completed\n";
+    
+    if ((defined $completed) and ($completed ne "")) {
+	return (older( $dt_old_cutoff, $completed));
+    }
+
+    #my $dtstart = get1propval($e, 'dtstart');
+    #print "nc-dtstart: $dtstart\n";
+    
+    #if ((defined $dtstart) and ($dtstart ne "")) {
+	#return (older( $dt_old_cutoff, $dtstart));
+    #}
+
+
+    #my $due = get1propval($e, 'due');
+    #print "nc-due: $due\n";
+    
+    #if ((defined $due) and ($due ne "")) {
+	#return (older( $dt_old_cutoff, $due));
+    #}
+
+    #my $created = get1propval($e, 'created');
+    #print "nc-created: $created\n";
+    
+    #if ((defined $created) and ($created ne "")) {
+	#return (older( $dt_old_cutoff, $created));
+    #}
+
+    #die "newcheck: failed to find defined dtatestamps to check\n";
+    #print "nc: default return 1\n";
+    return 1;  # incomplete todo with no due date
+
+}
+
+sub update {  # update from $hr1 to $hr2
+    my $hr1 = shift;
+    my $hr2 = shift;
+
+    my $lm1 = get1propval($hr1, 'last-modified');
+    my $lm2 = get1propval($hr2, 'last-modified');
+
+    my $uid1 = uid($hr1);
+
+    if (older($lm1,$lm2)) {
+	print "updating - conflict! $lm1 older than $lm2, overwriting with older  : ". summary($hr1) ."\n";
+    } else {
+	#print "updating - good, $lm1 not older than $lm2\n";
+    }
+
+    my $props1r = $hr1->properties();
+    my $props2r = $hr2->properties();
+
+    #my $sum = get1propval($hr1, 'summary');
+    #print "summary: $sum \n";
+    #print "comparing :\n";
+    #foreach my $k (keys %{$props1r}) {
+	#print "$k ";
+    #} 
+    #print "\nto\n";
+    #foreach my $k (keys %{$props2r}) {
+	#print "$k ";
+    #} 
+    #print "\n";
+
+    my $diffs=0;
+
+    foreach my $p1 (keys %{$props1r}) {
+	next if ($p1 eq 'dtstamp');  # seems to change frequently in korganizer
+	if (not exists $props2r->{$p1}) {
+	    #print "$p1 not in set2\n";
+
+	    if (verbose_chk($uid1)) {
+		#if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $uid1)) {
+		print "update UID $uid1: adding property $p1 to destination\n";
+	    }
+
+	    #$hr2->add_property( $p1 => [ get1propval($hr1,$p1), { VALUE => $p1 } ] ) ;
+	    $hr2->add_property( $p1 => [ get1propval($hr1,$p1), { } ] ) ;
+	    $diffs++;
+
+	} else {
+	    my $varr1r = $props1r->{$p1};
+	    my $varr2r = $props2r->{$p1};
+
+	    my @varr1 = @{ $props1r->{$p1} };
+	    my @varr2 = @{ $props2r->{$p1} };
+	    
+	    my $varr1c = $#varr1;
+	    my $varr2c = $#varr2;
+	    if ( $varr1c !=  $varr2c ) {
+		print "update UID $uid1 : skipping because different value count for $p1 between same entries!\n";
+		print "source:";
+		for (my $j=0;$j <= $varr1c; $j++) {
+		    my $vh1r = $varr1r->[$j];
+		    print "  ". $vh1r->{'key'} ." : ". $vh1r->{'value'} ;
+		}
+		print "\n";
+
+		print "destination:";
+		for (my $j=0;$j <= $varr2c; $j++) {
+		    my $vh2r = $varr2r->[$j];
+		    print "  ". $vh2r->{'key'} ." : ". $vh2r->{'value'};
+		}
+		print "\n";
+
+	    } else {
+		for (my $i=0; $i <= $varr1c; $i++) {  # let's assume same order :-)
+		    my $vh1r = $varr1r->[$i];
+		    my $vh2r = $varr2r->[$i];
+
+		    if ((defined $vh1r->{'key'}) and (not defined $vh2r->{'key'})) {
+			$vh2r->{'key'} = $vh1r->{'key'};
+			$vh2r->{'value'} = $vh1r->{'value'};
+			$diffs++;
+
+			if (verbose_chk($uid1)) {
+			    #if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $uid1)) {
+			    print "update UID $uid1: setting $p1 to ". $vh1r->{'value'} ." (was undef)\n";
+			}
+
+		    };
+
+		    if ( $vh1r->{'key'} ne $vh2r->{'key'} ) {
+			print "ack!  keys differ : ".
+			    $vh1r->{'key'} ." ne ". $vh2r->{'key'} ." !\n";
+		    } elsif ( $vh1r->{'value'} ne $vh2r->{'value'} ) {
+			$diffs++;
+			#print "src 2 $p1 value = ". $vh2r->{'value'};
+			#print " changing to ". $vh1r->{'value'} ."\n";
+
+			# clean weird chars from outlook email appts
+			if ($vh1r->{'value'} =~ /\\/) {
+			    print "clearing \\ chars from UID $uid1 : ". $vh1r->{'value'} ."\n";
+			    $vh1r->{'value'} =~ s/\\//g;
+			}
+
+			if (verbose_chk($uid1)) {
+			    #if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $uid1)) {
+			    print "update UID $uid1: setting $p1 to ". $vh1r->{'value'} ." (was ". $vh2r->{'value'} .")\n";
+			}
+			$vh2r->{'value'} = $vh1r->{'value'};
+		    }
+		}
+	    }
+	}
+    }
+
+    return $diffs;
+}
+
+sub add2cal {
+    my $entry = shift;
+    my $hr = shift;
+    if (exists $hr->{ 'phone' }) {
+	#print "adding ". summary($entry) ." to phone\n";
+	# create and add a new phone cal = entry
+	my $cal = Data::ICal->new(vcal10 => 1);
+	$cal->add_property( prodid => [ $prodid_str, { } ] );
+	$cal->add_entry($entry);
+
+	#my $e = @{$cal->entries()}[0];
+	#my $lm = get1propval($entry,'last_modified');
+	#if (defined $lm) {
+	#    $e->add_property( last_modified => [$lm, {VALUE => 'LAST_MODIFIED'}] );
+	#}
+	#update($entry,$e);
+			      
+	$max_phone_entry++;
+	$hr->{$max_phone_entry} = $cal;
+	$phone_add{$max_phone_entry} = 1;
+
+    } else {
+	#print "adding ". summary($entry) ." to korg\n";
+	# add to korg calendar
+	$hr->add_entry($entry);
+    }
+}
+
+sub del_from_cal {
+    my $targ_entry = shift;
+    my $hr = shift;
+
+    my $targ_uid = uid($targ_entry);  # prob could just compare array ref directly
+
+    if (verbose_chk($targ_uid)) {
+	#if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $targ_uid)) {
+	print "deleting UID $targ_uid : ". summary($targ_entry) ." from Korganizer data\n";
+    }
+
+    if (exists $hr->{ 'phone' }) {
+	die "del_from_cal() called for phone_set - not implemented, see e.g. korg_clean_phone()\n";
+    } else {
+	# remove from korg calendar
+
+	my $aker = $hr->entries() ;
+	my @ake = @{ $aker };
+	
+	for (my $i=0; $i <= $#ake; $i++) {
+	    my $ke = $aker->[$i];
+	    if (defined $ke) {
+		my $ke_uid = uid($ke);
+		if ((defined $ke_uid) and ($ke_uid eq $targ_uid)) {
+		    #delete $aker->[$i];
+		    splice(@{ $aker }, $i, 1);
+		    return ;
+		}
+	    }
+	}
+
+    }
+}
+
+sub ical2vcal_rrule {
+    # from http://code.google.com/p/ical2vcal/source/browse/trunk/vcal.py
+    my $rr = shift;
+    my $dtstart = shift;
+
+    $rr =~ s/\x0d//;
+    my $byday=0;
+
+    my ($freq, $freqtype, $interval, $fmod, $dur) = ("","","1","", "#0");
+    #print "\n";
+    my @params = split m/;/,$rr;
+    #print "\n";
+    foreach my $p (@params) {
+	my @fields = split m/=/,$p;
+	#print "fields= ". $fields[0] ." ", $fields[1] ."\n";
+	#print "$f \n";
+	if ($fields[0] =~ /FREQ/) {
+	    my @chars = split //,$fields[1];
+	    $freq = $chars[0];
+#	    print "freq= $freq\n";
+	} elsif ($fields[0] =~ /UNTIL/) {
+	    $dur = $fields[1];
+#	    print "dur = $dur\n";
+	} elsif ($fields[0] =~ /INTERVAL/) {
+	    $interval = $fields[1];
+#	    print "interval= $interval\n";
+	} elsif ($fields[0] =~ /COUNT/) {
+	    $dur = "#". $fields[1];
+	} elsif	($fields[0] =~ /BYDAY/) {
+	    $byday=1;
+	    $freqtype = "P";
+	    my @parts = split m/,/,$fields[1];
+#print "parts_0 = $parts[0] \n";
+	    foreach my $seg (@parts) {
+#print "seg= $seg\n";
+		$seg =~ /([\+\-]*)(\d*)(\D*)/;
+		my $sgn = $1;
+		my $ith = $2;
+		my $day = $3;
+		$sgn = "+" if ($sgn eq "" and $ith ne "");
+		my $newstr = sprintf "%s%s %s",$ith, $sgn, $day;
+		$fmod .= $newstr;
+	    }
+
+#print "freqtype = $freqtype fmod= $fmod \n";
+	} elsif ($fields[0] =~ /BYMONTHDAY/) {
+	    $freqtype = "D";
+	    $fmod = $fields[1];
+	} elsif ($fields[0] =~ /BYMONTH/) {
+	    if ($byday) {
+		print "unable to convert iCal RRULE $rr to vCal\n";
+		return "";
+	    }
+	    $freqtype = "M";
+	    $fmod = $fields[1];
+	} elsif ($fields[0] =~ /BYYEARDAY/) {
+	    $freqtype = "D";
+	    $fmod = $fields[1];
+
+	};
+	    
+
+    }
+
+    if ($freqtype eq "") {
+	$dtstart =~ /\d{4}(\d{2})(\d{2})/;
+	my $mo = $1;
+	my $dy = $2;
+	#print "mo= $mo dy= $dy  dtstart= $dtstart \n";
+	# pick default for yearly 
+	if ($freq eq "y") {
+	    $freqtype = "M";  # i'th month of year
+	    $fmod = $mo;
+	} elsif ($freq eq "m") {
+	    $freqtype = "D";
+	    $fmod = $dy;
+	}
+    }
+
+    $freqtype = "" if ($freq eq 'W' and $freqtype eq 'P');
+    #print"\nend: freq= $freq freqtype= $freqtype interval= $interval fmod= $fmod dur= $dur\n";
+    
+    if ($dur !~ /\#/) {
+	$dur = datestr_to_local($dur);
+    }
+
+    my $rstr = sprintf "%s%s%s %s %s", $freq, $freqtype, $interval, $fmod, $dur;
+    $rstr =~ s/  / /g;
+    #print "\n";
+    return $rstr;
+}
+
+sub vcal2ical_rrule {
+    my $rr = shift;
+    my ($freq, $interval, $dur, $count, $byday, $bymday, $bymonth, $byyd) 
+	= ("","","","","","","","","");
+    
+    
+    if ($rr =~ /^D(\d+) (\S+)/) {
+	$freq= "DAILY";
+	if ($1 != 1) {
+	    $interval= $1;
+	}
+
+	$dur = $2;
+
+    } elsif ($rr =~ /^W(\d+) (\D{2} )+(\S+)/) {
+	$freq = "WEEKLY";
+	if ($1 != 1) {
+	    $interval= $1;
+	}
+
+	$byday = $2;
+	$dur = $3;
+
+	$byday =~ s/ $//;
+	$byday =~ s/ /,/g;
+
+    } elsif ($rr =~ /^MP(\d+) (\d+[\+\-]? )+(\D{2}) (\S+)/) {
+	$freq= "MONTHLY";
+	if ($1 != 1) {
+	    $interval= $1;
+	}
+	my $dy = $3;
+	$dur = $4;
+	my $ft = $2;
+
+	my @freqtype = split / /, $ft;
+	for (my $i=0; $i <= $#freqtype; $i++) {
+	    $byday .= ',' if ($i > 0);
+	    $freqtype[$i] =~ /(\d+)([\+\-])?/;
+	    my $ith = $1;
+	    my $sgn = $2;
+	    $sgn =~ s/\+//;
+	    $byday .= "$sgn$ith$dy";
+	}
+    } elsif ($rr =~ /^MD(\d+) (\d+ |\d+[\+\-] |LD )+(\S+)/) {
+	$freq= "MONTHLY";
+	if ($1 != 1) {
+	    $interval= $1;
+	}
+
+	my $ft = $2;
+	$dur = $3;
+
+	my @freqtype = split / /, $ft;
+	for (my $i=0; $i <= $#freqtype; $i++) {
+	    $bymday .= ',' if ($i > 0);
+	    if ($freqtype[$i] =~ /(\d+)([\+\-])?/) {
+		my $ith = $1;
+		my $sgn = $2;
+		$sgn = "" if ((not defined $sgn) or ($sgn eq '+'));
+		$bymday .= "$sgn$ith";
+	    } elsif ($freqtype[$i] =~ /LD/) {
+		$bymday .= "-1";
+	    }
+	}
+    } elsif ($rr =~ /^Y(\D)(\d+) (\d+ )+(\S+)/) {
+	$freq= "YEARLY";
+	
+	my $yt = $1;
+
+	if ($2 != 1) {
+	    $interval= $1;
+	}
+
+	my $ft = $3;
+	$dur = $4;
+
+	my @freqtype = split / /, $ft;
+	for (my $i=0; $i <= $#freqtype; $i++) {
+	    if ($yt eq 'M') {
+		$bymonth .= ',' if ($i > 0);
+		$bymonth .= $freqtype[$i];
+	    } else {
+		$byyd .= ',' if ($i > 0);
+		$byyd .= $freqtype[$i];
+	    }
+	}
+    } else {
+	print "vcal2ical failed to parse: .$rr.\n";
+	return $rr;
+    }
+
+
+    if ($dur =~ /\#(\d+)/) {
+	my $c = $1;
+	$dur = "";
+	if ($c != 0) {
+	    $count = $c;
+	}
+    } else {
+	if (datestr_is_0time($dur)) {
+	    $dur = datestr_local_date($dur);
+	} else {
+	    $dur = datestr_to_gmt($dur);
+	}
+    }
+
+    my $rstr = "FREQ=$freq;";
+    $rstr .= "INTERVAL=$interval;" if ($interval ne "");
+    $rstr .= "UNTIL=$dur;" if ($dur ne "");
+    $rstr .= "COUNT=$count;" if ($count ne "");
+    $rstr .= "BYDAY=$byday;" if ($byday ne "");
+    $rstr .= "BYMONTHDAY=$bymday;" if ($bymday ne "");
+    $rstr .= "BYMONTH=$bymonth;" if ($bymonth ne "");
+    $rstr .= "BYYEARDAY=$byyd;" if ($byyd ne "");
+
+    chop $rstr;  # lose final ;
+
+    return $rstr;
+}
+
+sub vcal2ical_attendee {  
+    # nokia to korg
+    my $atnd = shift;
+    
+    #print "v2i_atnd start: $atnd \n";
+
+    $atnd =~ s/\=YES\;/\=TRUE\;/g;
+    $atnd =~ s/\=NO\;/\=FALSE\;/g;
+
+    $atnd =~ s/X\-ROLE\=REQ\-PARTICIPANT/ROLE\=REQ\-PARTICIPANT/;
+    $atnd =~ s/X\-STATUS/STATUS/;
+    $atnd =~ s/X\-CN/CN/;
+    $atnd =~ s/\=40/\@/g;
+
+    $atnd =~ s/X\-PHONEOWNER\;/X\-PHONEOWNER=\;/;  # critical for ICal::Data
+
+    #$atnd =~ s///;
+
+    #print "v2i_atnd fin: $atnd \n";
+
+    return $atnd;
+}
+
+sub ical2vcal_attendee {  
+    # korg to nokia
+    my $atnd = shift;
+    #print "i2v_atnd start: $atnd \n";
+
+    $atnd =~ s/\=TRUE\;/\=YES\;/g;
+    $atnd =~ s/\=FALSE\;/\=NO\;/g;
+
+    $atnd =~ s/ROLE\=REQ\-PARTICIPANT/X\-ROLE\=REQ\-PARTICIPANT/;
+    $atnd =~ s/STATUS/X\-STATUS/;
+    $atnd =~ s/CN/X\-CN/;
+    $atnd =~ s/\@/\=40/g;
+    
+    $atnd =~ s/X\-PHONEOWNER=\;/X\-PHONEOWNER\;/;  # not so necessary to restore
+
+    #print "i2v_atnd fin: $atnd \n";
+
+    return $atnd;
+}
+
+sub future_todo {
+    my $e = shift;
+    return 0 unless ($rm_not_started_todo);
+    if ($e->ical_entry_type() eq 'VTODO') {
+	my $dtstart = get1propval($e,'dtstart');
+	return 1 if ((defined $dtstart) and (older( $dt_do_todo, $dtstart)));
+    }
+    return 0;
+}
+
+sub completed_todo {
+    my $e = shift;
+
+    if ($e->ical_entry_type() eq 'VTODO') {
+	my $completed = get1propval($e,'completed');
+	return 1 if (defined $completed);
+    }
+    return 0;
+}
+
+sub k_keep_completed_todo {
+    my $e = shift;
+    return 0 unless ($done_todos_korg_only);
+    return (completed_todo($e));
+}
+	    
+sub syscmd {
+    my $cmd = shift;
+    my $rc= 0xffff & system($cmd);
+    return 1 unless ($rc);
+    if ($rc == 0xff00) {
+	print "sys command \"$cmd \" failed: $!\n";
+    } elsif ($rc > 0x80) {
+	$rc >>= 8;
+	print "sys command \"$cmd \" returned $rc\n";
+	return($rc);
+    } else {
+	print "sys command \"$cmd \" ran with \n";
+	if ($rc & 0x80) {
+	    $rc &= ~0x80;
+	    print "coredump from ";
+	}
+	print "signal $rc\n";
+    }
+
+    return 0;
+}
+
+sub sync_phone {
+    #syscmd( $sync_cmd );
+
+    print "initiating phone sync ... \n";
+    if ($dry_run) {
+	print " ... dry run only, skipping\n";
+	return 1;
+    }
+
+    my $max_retries=3;
+    my $retries= $max_retries;
+    my $done=0;
+    my $err=0;
+
+    while ((not $done) and ($retries > 0)) {
+	my $sync_log="$sync_cmd\n";
+	open SYNC, "$sync_cmd 2>&1 |" or die "unable to exec $sync_cmd : $!\n";
+	while (<SYNC>) {
+	    $sync_log .= $_;
+	    if (/SyncML session finished successfully/) {
+		$done=1;
+	    } elsif (/ERROR/) {
+		$err=1;
+	    }
+	}
+
+	close SYNC;
+
+	$retries--;
+	if ($err) {
+	    print "\nThere was an error connecting to the phone.  The log is:\n ->\n$sync_log <-\n";
+	    $err=0;
+	    sleep 2;
+	} else {
+	    print "finished sync attempt; results :\n$sync_log \n" if ($verbose);
+	}
+
+    }
+
+    if ($done) {
+	print "phone sync completed successfully.\n" if ($verbose);
+	return 1;
+    }
+
+    return 0;
+    #die "unable to sync with phone; see log messages.\n"
+}
+
+sub read_last_sync {
+    open (LASTSYNC, "$wrk_dir/last_sync") 
+	or die "unable to open $wrk_dir/last_sync for read: $! \n";
+    while (<LASTSYNC>) {
+	if (/^(\d{8}T\d{6})$/) {
+	    $dt_last_sync = $1;
+	    print "last sync at $dt_last_sync\n";
+	}
+    }
+    close LASTSYNC;
+}
+
+sub read_bad_sync {
+
+    open (BADSYNC, "$wrk_dir/bad_sync2") 
+	or die "unable to open $wrk_dir/bad_sync2 for read: $! \n";
+    while (<BADSYNC>) {
+	if (/^(\d{8}T\d{6})$/) {
+	    $dt_bad_sync2 = $1;
+	    print "last sync FAILED at $dt_last_sync\n";
+	}
+    }
+    close BADSYNC;
+}
+
+sub set_times {
+
+    my $secs = time();
+
+    my $tm = localtime($secs - (60 * 60 * 24 * 7 * $weeks_old));
+    my ($sc, $mn, $hr, $dy, $mo, $yr) = ($tm->sec, $tm->min, $tm->hour, $tm->mday, $tm->mon, $tm->year);
+
+    $yr += 1900; $mo++;
+
+    $dt_old_cutoff = sprintf "%4d%02d%02dT%02d%02d%02d", $yr, $mo, $dy, $hr, $mn, $sc;
+
+    $tm = localtime($secs);
+    ($sc, $mn, $hr, $dy, $mo, $yr) = ($tm->sec, $tm->min, $tm->hour, $tm->mday, $tm->mon, $tm->year);
+
+    $yr += 1900; $mo++;
+
+    $dt_now = sprintf "%4d%02d%02dT%02d%02d%02d", $yr, $mo, $dy, $hr, $mn, $sc;
+
+    $tm = localtime($secs + (60 * 60 * 36));
+    ($sc, $mn, $hr, $dy, $mo, $yr) = ($tm->sec, $tm->min, $tm->hour, $tm->mday, $tm->mon, $tm->year);
+
+    $yr += 1900; $mo++;
+
+    $dt_do_todo = sprintf "%4d%02d%02dT%02d%02d%02d", $yr, $mo, $dy, $hr, $mn, $sc;
+
+}
+
+sub init {
+
+    print "init\n" if ($verbose);
+
+    set_times();
+
+    print "starting sync at $dt_now\n";
+
+    if (! -d $wrk_dir) {
+	die unless (syscmd("mkdir -p $wrk_dir"));
+    }
+    if (! -d $cal_dir) {
+	die unless (syscmd("mkdir -p $cal_dir"));
+    }
+    if (! -d $cal_bak_dir) {
+	die unless (syscmd("mkdir -p $cal_bak_dir"));
+    }
+
+    if (-e "$wrk_dir/last_sync") {
+	read_last_sync();
+	#syscmd("rm $wrk_dir/last_sync");  # if we die, re-start should expect fresh phone data
+	#  -- except above would cause write to phone if data exists in syncml syncdir ($cal_dir)
+	#     even if $no_2nd_sync = true
+    } else {
+	print "no previous sync detected\n";
+    }
+
+    if (-e "$wrk_dir/bad_sync2") {
+	read_bad_sync();
+	syscmd("rm $wrk_dir/bad_sync2");    # that was before, hope better this time
+    } else {
+	print "last sync completed ok\n" if ($verbose and ($dt_last_sync ne ""));
+    }
+}
+
+sub load_korg_data {
+### read korganizer data
+    print "load_korg_data\n" if ($verbose);
+
+    my $korg_cal = Data::ICal->new(filename => $korg_src);
+
+
+    die "error reading korganizer data from \n $korg_src \n  : $! \n"
+	unless ($korg_cal);
+
+#printcal($korg_cal);
+
+    my %ke_counts = ();
+    my $ke_read = reportEntries($korg_cal,\%ke_counts);
+    
+    if ($verbose) {
+	foreach my $k (keys %ke_counts) {
+	    printf "%10s : %7d\n",$k, $ke_counts{$k};
+	}
+    }
+
+    print "korganizer data loaded : $ke_read items read\n";
+
+### finished reading korg data
+
+    return $korg_cal;
+}
+
+sub hide_valarm {
+    my $txt = shift;
+
+    return ($txt) if ($txt !~ /VALARM/);
+
+    #print "hide_valarm -- input: \n->$txt<-\n";
+
+    my @lines = split /^/, $txt;
+
+    foreach my $lin (@lines) {
+	#print "lin= .$lin.\n";
+	if ($lin =~ /BEGIN\:VALARM/) {
+	    $in_valarm = 1;
+	    $lin =~ s/BEGIN\:VALARM/X\-VALARM=1\;/;
+	    chop $lin;
+	    chop $lin;
+	    #print "change: .$lin.\n";
+	} elsif ($lin =~ /END\:VALARM/) {
+	    $in_valarm = 0;
+	} elsif ($in_valarm) {
+	    chop $lin;
+	    chop $lin;
+	    $lin .= "=1;";
+	    #print "change: .$lin.\n";
+	}
+
+	$out_txt .= $lin
+    }
+
+    #print "hide_valarm -- output: \n->$out_txt<-\n";
+    return $out_txt;
+}
+
+sub unhide_valarm {
+    my $txt = shift;
+
+    #print "unhide_valarm -- input: \n->$txt<-\n";
+
+    $txt =~ s/X\-VALARM/BEGIN\:VALARM/;
+    $txt =~ s/=1\;/\n/g;
+
+    #print "unhide_valarm -- output: \n->$txt<-\n";
+    return $txt;
+}
+
+#sub hide_aalarm {
+#    my $txt = shift;
+#    print "hide_aalarm -- input: \n$txt\n";
+#    $txt =~ s/^AALARM/X\-AALARM/;
+#    print "hide_aalarm -- output: \n$txt\n";
+#    return $txt;
+#}
+
+#sub unhide_aalarm {
+#    my $txt = shift;
+#
+#    return ($txt) if ($txt !~ /X\-AALARM/);
+#
+#    print "unhide_aalarm -- input: \n$txt\n";
+#    $txt =~ s/^X\-AALARM/AALARM/;
+#    print "unhide_aalarm -- output: \n$txt\n";
+#
+#    return $txt;
+#}
+
+
+sub filter_from_phone {
+    my $filtxt = shift;
+
+    $filtxt = vcal2ical_attendee( $filtxt ); 
+    
+    #if ($filtxt =~ /UID\:(.*)\n/) {
+	#print "UID: $1 \n";
+    #}
+
+    if ($filtxt =~ /RRULE\:(.*)\n/) {
+    #if ($filtxt =~ /RRULE\:(.*)$CRLF/) {
+	my $rrule_in = $1;
+	my $rrule_out = vcal2ical_rrule($rrule_in);
+	#print "from_phone: rrule_in= .$rrule_in.\nrrule_out= .$rrule_out.\n";
+
+	#$filtxt =~ s/RRULE\:.*$CRLF/RRULE\:$rrule_out$CRLF/;
+	$filtxt =~ s/RRULE\:.*\n/RRULE\:$rrule_out\n/;
+    }
+
+    # phone things
+    #if ($filtxt =~ /VEVENT/) {
+    $filtxt =~ s/\nCLASS\:/\nX-CLASS\;VALUE\=TEXT\:/;   # should only be 1 per entry
+    #$filtxt =~ s/\nAALARM\;TYPE/\nX-AALARM\;VALUE\=TEXT\:TYPE/g; # korg can't handle
+    $filtxt =~ s/\nAALARM\;/\nX-AALARM\;VALUE\=TEXT\:/g; # korg can't handle
+    $filtxt =~ s/\nAALARM/\nX-AALARM/g;  ## just in case...
+    #$filtxt =~ s/\\\;/\;/g;
+    #}
+    
+    # korganizer things
+    $filtxt =~ s/\nX-CREATED\:/\nCREATED\:/;
+    $filtxt =~ s/\nX-ORGANIZER\:/\nORGANIZER\:/;
+    $filtxt =~ s/\nX-TRANSP\:/\nTRANSP\:/;
+    $filtxt =~ s/\nX-SEQUENCE\:/\nSEQUENCE\:/;
+
+    return $filtxt;
+}
+
+sub from_nokia_allday {
+    my $e = shift;
+
+    # hack nokia all-day events to korg equiv
+    # need to do immediately after read phone in, immed before write phone out
+
+    return unless ($e->ical_entry_type() eq "VEVENT");
+
+    my $dts;
+    my $dte;
+    if (($dts = get1propval($e,'dtstart'))
+	and
+	($dte = get1propval($e,'dtend'))
+	) {
+
+	#print "from_nokia_allday: dts= $dts dte= $dte\n";
+
+	my $dts_secs = datestr_secs($dts);
+	my $dte_secs = datestr_secs($dte);
+
+	if ((($dte_secs - $dts_secs) % ( 60 * 60 * 24 )) == 0) {  # diff exact n days
+	    #print "identified nokia all day meeting- uid: ". uid($e) ."\n";;
+	    
+	    $e->add_property( 'dtstart' => [ datestr_local_date($dts), { } ]);
+	    $e->add_property( 'dtend' => [ datestr_local_date($dte), { } ]);
+	    
+	    #$dts = get1propval($e,'dtstart');
+	    #$dte = get1propval($e,'dtend');
+	    #print "  fnad - output: dts= $dts  dte= $dte\n";
+	    
+	}
+    }
+}
+
+sub from_nokia_todo {
+    my $e = shift;
+
+    return unless ($e->ical_entry_type() eq "VTODO");
+    #print"from nokia vtodo convert _". summary($e) ."_ \n";
+
+    #my $xs=0;
+
+    my $s = get1propval($e,'x-status');
+    #if (defined $s) {
+	#print " x-status= $s \n";
+	#$xs=1;
+    #} else {
+	$s = get1propval($e,'status');
+	if (defined $s) {
+	    #print " status= $s \n";
+	#} else {
+	    #print "no status defined\n";
+	}
+    #}
+
+    my $pc = get1propval($e,'percent-complete');
+    #if (defined $pc) {
+	#print "input percent-complete= $pc\n";
+    #}
+
+    my $cmpl = get1propval($e,'completed');
+    #if (defined $cmpl) {
+	#print "input completed= $cmpl\n";
+    #}
+
+    if (defined $s and $s eq 'COMPLETED') {
+	if (defined $pc) {
+	    if ($pc ne '100') {
+		set1propval($e,'percent-complete','100');
+	    }
+	} else {
+	    $e->add_property( 'percent-complete' => [ '100', { } ] );
+	}
+	
+	if (not defined $cmpl) {
+	    my $lm = get1propval($e,'last-modified');
+	    $e->add_property( 'completed' => [ $lm, { } ] );
+	}
+    } elsif (not defined $s or $s ne 'COMPLETED')  {
+	if (defined $pc) {
+	    if ($pc eq '100') {
+		set1propval($e,'percent-complete','0');
+	    }
+	} else {
+	    $e->add_property( 'percent-complete' => [ '0', { } ] );
+	}
+	
+	if (defined $cmpl) {
+	    rm_property($e,'completed');
+	}
+    }
+
+    return;
+# done here
+
+    $s = get1propval($e,'x-status');
+    if (defined $s) {
+	print " x-status output = $s \n";
+	#$xs=1;
+    } else {
+	$s = get1propval($e,'status');
+	if (defined $s) {
+	    print " status output = $s \n";
+	} else {
+	    print "output no status defined\n";
+	}
+	    
+    }
+
+    $pc = get1propval($e,'percent-complete');
+    if (defined $pc) {
+	print "output percent-complete= $pc\n";
+    }
+
+    $cmpl = get1propval($e,'completed');
+    if (defined $cmpl) {
+	print "output completed= $cmpl\n";
+    }
+}
+
+sub from_nokia {
+    my $phone_entry = shift;
+
+    my $e = ($phone_entry->entries())->[0];
+
+    from_nokia_allday( $e );
+    from_nokia_todo( $e );
+}
+
+sub load_phone_data {
+
+    print "load_phone_data\n" if ($verbose);
+
+    opendir(DIR,$cal_dir) or die "can't open dir $cal_dir: $!";
+
+    my %phone_set=();
+    my $pe_read=0;
+    my %pe_counts=();
+    my $file;
+
+    $phone_set{'phone'} = 1;   # hack so we can easily tell from korg_set.
+
+    while (defined($file = readdir(DIR))) {
+	if ($file eq "SYNCML-DS-TOOL-LAST-SYNC.INDEX") {
+	    open (NDX,"$cal_dir/$file") 
+		or die "unable to open index $cal_dir/$file : $!\n";
+	    while (<NDX>) {
+		if (/^(\d+)=(\d+)$/) {
+		    $max_phone_entry = $1 if ($1 > $max_phone_entry);
+		    $max_phone_entry = $2 if ($2 > $max_phone_entry);
+		}
+	    }
+	    close NDX;
+	}
+
+	if ($file =~ /^(\d+)(_dup)?$/) {
+	    my $filnum = $1;
+	    #print "  filnum= $filnum\n";
+	    $max_phone_entry = $filnum if ($filnum > $max_phone_entry);
+	} else {
+	    next;
+	}
+
+	#print "file= $file\n";
+
+	
+	open (INFIL,"$cal_dir/$file") 
+		or die "unable to open index $cal_dir/$file : $!\n";
+	my $have_prodid =0;
+	my $filtxt="";
+
+	my %have_seen = ();
+
+	while (<INFIL>) {
+	    next if (defined $have_seen{"$_"});
+	    $have_seen{"$_"} = 1;
+
+	    if (/^VERSION\:(\d+\.?\d*)$/) {
+		my $v = $1;
+		print "file $cal_dir/$file - unexpected version: $v\n" unless ($v == 1.0);
+		$filtxt .= "PRODID:$prodid_str\n" unless $have_prodid;
+		$have_prodid=1;
+		$filtxt .= $_;
+	    } elsif (/^PRODID\:/) {
+		if ($have_prodid) {
+		    print "file $cal_dir/$file - extra prodid: $_";
+		} 
+		$have_prodid=1;
+		$filtxt .= $_;
+	    } elsif (/X\-VALARM/) {
+		$filtxt .= unhide_valarm($_);
+	    #} elsif (/AALARM/) {
+	#	$filtxt .= hide_aalarm($_);
+	    } else {
+		$filtxt .= $_;
+	    }		    
+	}
+	close INFIL;
+	
+
+	$filtxt = filter_from_phone( $filtxt );
+
+
+	#if ($filtxt =~ /X\-PHONEOWNER/) {
+	#    print "xxxx\n$filtxt\nyyyy\n";
+	#}
+
+	#print "filtxt=\n$filtxt\n";
+
+	my $phone_entry;
+
+	my $dflt_warn_handler = $SIG{__WARN__};
+	$SIG{__WARN__} = \&filter_known_warnings;
+
+	eval {$phone_entry = Data::ICal->new(data => "$filtxt", vcal10 => 1) };
+	$SIG{__WARN__} = $dflt_warn_handler;
+
+	if (not $phone_entry) {
+	    print "Data::ICal failed loading phone data $cal_dir/$file : \n$filtxt\n";
+	    die "error reading phone data from \n $cal_dir/$file \n : $!"
+	}
+
+	from_nokia( $phone_entry );
+
+	$phone_set{$file} = $phone_entry;
+	$pe_read += reportEntries($phone_entry,\%pe_counts);
+	
+	#print $phone_entry->as_string;
+
+	#printcal($phone_entry);
+    }
+    closedir(DIR);
+
+    if ($verbose) {
+	foreach my $k (keys %pe_counts) {
+	    printf "%10s : %7d\n",$k, $pe_counts{$k};
+	}
+    }
+
+    print "phone data loaded : $pe_read items read\n";
+    #print "max_phone_entry = $max_phone_entry \n";
+
+### done reading phone data
+    
+    return \%phone_set;
+}
+
+sub phone2korg {
+    my $phone_set = shift;
+    my $korg_cal = shift;
+
+    #my $count=2;
+
+    print "phone2korg\n" if ($verbose);
+
+    my $matches = 0;
+    my $changes = 0;
+    my $adds = 0;
+
+### search korg data for phone entries
+
+    foreach my $k (keys %{ $phone_set }) {
+	next if ($k eq 'phone');
+	my @ape = @{ ($phone_set->{$k})->entries() };
+	my $pe = $ape[0];  # only 1 entry per cal file
+	my $p_uid = uid($pe);
+	if (my $ke = findUIDentry( $p_uid, $korg_cal )) {
+	    #print "-> read phone data $k, found match in korg data for -". 
+	        #summary( $pe ) ."-\n";
+	    $matches++;
+	    my $diffs = update( $pe, $ke );
+	    if ($diffs) {
+		if (verbose_chk($p_uid)) {
+		    #if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $p_uid)) {
+			print "UID $p_uid : _". summary($pe) ."_ updated in Korganizer data with $diffs differences\n" 
+
+		}
+		    
+		$changes++;
+
+		#return if ($count-- <= 0);
+	    #} else {
+		#print "item unchanged\n";
+	    }
+	} else {
+	    #print "-> no UID match in korg for phone data $k -". summary( $pe ) ."-\n";
+
+	    if (verbose_chk($p_uid)) {
+		#if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $p_uid)) {
+		print "adding UID $p_uid : _". summary($pe) ."_ to Korganizer data\n";
+	    }
+
+	    add2cal( $pe, $korg_cal );
+	    $adds++;
+
+	    #return if ($count-- <= 0);
+	}
+    }
+
+    print "phone -> korganizer: $matches found ($changes updated), $adds added.\n";
+
+}
+
+sub korg2phone {
+    my $korg_cal = shift;
+    my $phone_set = shift;
+
+    print "korg2phone\n" if ($verbose);
+
+    my $matches = 0;
+    my $changes = 0;
+    my $adds = 0;
+    my $skips = 0;
+
+### search phone data for korg entries 
+    my @kentries = @{ $korg_cal->entries() };
+    foreach my $ke (@kentries) {
+	next if ($ke->ical_entry_type() eq "VTIMEZONE");
+	my $uid = uid($ke);
+	if (my $pe = findUIDentry( $uid, $phone_set )) {
+	    #print "read korg data, found match in phone data for ". 
+		#summary( $ke ) ."\n";
+	    $matches++;
+	    my $diffs = update( $ke, $pe );
+	    if ($diffs) {
+		#print "item updated : $diffs differences\n";
+
+		if (verbose_chk($uid)) {
+		    #if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $uid)) {
+		    print "UID $uid : _". summary($ke) ."_ updated in phone data with $diffs differences\n" ;
+		}
+		    
+		$changes++;
+		my $fno = findUID_phonekey($uid, $phone_set);
+		$phone_mod{$fno} = 1;
+	    #} else {
+		#print "item unchanged\n";
+	    }
+	} else {
+	    #print "no UID match in phone for korg data -". summary( $ke ) ."-\n";
+	    
+	    #my $sum = summary( $ke );
+	    #if ($sum eq "zoe passport") {
+		#printentry($ke);
+	    #}
+
+	    if (newcheck($ke) and (not future_todo($ke)) and (not k_keep_completed_todo($ke)) ) {
+		if (verbose_chk($uid)) {
+		    #if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $uid)) {
+		    print "adding UID $uid : _". summary($ke) ."_ to phone data\n";
+		}
+		add2cal( $ke, $phone_set );
+		$adds++;
+	    } else {
+		$skips++;
+	    }
+	}
+    }
+
+    print "korganizer -> phone: $matches found ($changes updated), $adds added";
+    if ($ignore_old_korg or $done_todos_korg_only) {
+	print " ($skips old entries and/or completed ToDos ignored).\n";
+    } else {
+	print ".\n";
+    }
+}
+
+
+sub korg_clean_phone {
+    my $korg_cal = shift;
+    my $phone_set = shift;
+
+    print "korg_clean_phone\n" if ($verbose);
+
+    my $rm = 0;
+    my $total = 0;
+
+    my @del_q=();
+
+### search korg data for each phone entry
+## delete from phone if not found in korg
+
+    foreach my $k (keys %{ $phone_set }) {
+	next if ($k eq 'phone');
+	$total++;
+	my @ape = @{ ($phone_set->{$k})->entries() };
+	my $pe = $ape[0];
+	my $p_uid = uid($pe);
+	if (my $ke = findUIDentry( $p_uid, $korg_cal )) {
+	    if (future_todo($ke)) {
+		if (verbose_chk($p_uid)) {
+		    #if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $p_uid)) {
+		    print "deleting item $k UID $p_uid : ". summary($pe) ." from phone data (future todo)\n";
+		}
+		push @del_q, $k; # clean if on phone already
+	    } elsif ($purge_phone_todo and completed_todo($ke)) {
+		if (verbose_chk($p_uid)) {
+		    print "deleting item $k UID $p_uid : ". summary($pe) ." from phone data (completed todo)\n";
+		}
+		push @del_q, $k; # clean if on phone already
+	    #} elsif (verbose_chk($p_uid)) {
+		#print "keeping item $k UID $p_uid : ". summary($pe) ." in phone data (not future or completed todo)\n";
+		#print "  purge_phone_todo= $purge_phone_todo \n";
+		#print "  entry_type= ". $ke->ical_entry_type() ."\n";
+		#my $pv = get1propval($pe,'completed');
+		#if (defined $pv) {
+		#    print "  completed= $pv\n";
+		#} else {
+		#    print "  completed not defined\n";
+		#}
+
+		#printprops($ke);
+	    }
+	} else {
+	    if (verbose_chk($p_uid)) {
+		#if (($verbose and (not defined $tu)) or (defined $tu and $tu eq $p_uid)) {
+		print "deleting item $k UID $p_uid : ". summary($pe) ." from phone data (not in korg data)\n";
+	    }
+	    push @del_q, $k;  # note is %phone_set hash key not entry ref
+	}
+    }
+
+    foreach my $pc (@del_q) {
+	delete $phone_set->{$pc};
+	$rm++;
+    }
+
+    print "korganizer -> phone: $rm of $total entries deleted.\n";
+
+}
+
+
+sub phone_clean_korg {
+    my $phone_set = shift;
+    my $korg_cal = shift;
+
+    print "phone_clean_korg\n" if ($verbose);
+
+    my $rm = 0;
+    my $total = 0;
+    my $skips = 0;
+
+    my @del_q = ();
+
+### search phone data for each korg entry
+##  delete from korg if not found on phone
+ 
+    my @kentries = @{ $korg_cal->entries() };
+    foreach my $ke (@kentries) {
+	next if ($ke->ical_entry_type() eq "VTIMEZONE");
+	$total++;
+	if (my $pe = findUIDentry( uid($ke), $phone_set )) {
+	} else {
+	    #print "no UID match in phone for korg data -". summary( $ke ) ."-\n";
+	    
+	    if (newcheck($ke) and (not future_todo($ke)) and (not k_keep_completed_todo($ke)) ) {
+		#my $sum = get1propval($ke,'summary');
+		#print "will delete .$sum. \n";
+		push @del_q, $ke;
+	    } else {
+		$skips++;
+	    }
+	}
+    }
+
+    foreach my $ke (@del_q) {
+	del_from_cal( $ke, $korg_cal );
+	$rm++;
+    }
+
+    print "phone -> korganizer: $rm of $total entries deleted ($skips old ignored).\n";
+}
+
+
+sub filter_to_phone {
+    my $outdat = shift;
+
+    $outdat = hide_valarm($outdat);
+    #$outdat = unhide_aalarm($outdat);
+    $outdat = ical2vcal_attendee($outdat);
+
+    #if ($outdat =~ /RRULE(.*)$CRLF/) {
+    if ($outdat =~ /RRULE(.*)\n/) {
+	my $rrule_in = $1;
+	$outdat =~ /DTSTART\:(\w+)/;
+	my $dtstart = $1;
+	my $rrule_out = ical2vcal_rrule($rrule_in, $dtstart);
+	print "to_phone: rrule_in= .$rrule_in.\nrrule_out= .$rrule_out.\n";
+
+	#$outdat =~ s/RRULE\:.*$CRLF/RRULE\:$rrule_out$CRLF/;
+	$outdat =~ s/RRULE\:.*\n/RRULE\:$rrule_out\n/;
+    }
+
+    # phone things
+    $outdat =~ s/\nX-CLASS\;VALUE\=TEXT\:/\nCLASS\:/;  # should only be 1 per entry, not in korg vevent
+    #$outdat =~ s/\nX-AALARM\;VALUE\=TEXT\:TYPE/\nAALARM\;TYPE/; 
+    $outdat =~ s/\nX-AALARM\;VALUE\=TEXT\:/\nAALARM\;/; 
+    $outdat =~ s/\nX-AALARM/\nAALARM/; 
+    $outdat =~ s/\\\;/\;/g;
+
+    #korganizer things
+    $outdat =~ s/\nCREATED\:/\nX-CREATED\:/;
+    $outdat =~ s/\nORGANIZER\:/\nX-ORGANIZER\:/;
+    $outdat =~ s/\nTRANSP\:/\nX-TRANSP\:/;
+    $outdat =~ s/\nSEQUENCE\:/\nX-SEQUENCE\:/;
+
+    return $outdat;
+}
+
+sub to_nokia_allday {
+    my $e = shift;
+
+    my $dts;
+    my $dte;
+    if (($dts = get1propval($e,'dtstart'))
+	and
+	($dte = get1propval($e,'dtend'))
+	) {
+
+	#print "to_nokia_allday: dts= $dts dte= $dte\n";
+	
+	my $dts_secs = datestr_secs($dts);
+	my $dte_secs = datestr_secs($dte);
+	
+	if ((($dte_secs - $dts_secs) % ( 60 * 60 * 24 )) == 0) {  # diff exact 1day
+	    #print "identified nokia all day meeting- uid: ". uid($e) ."\n";;
+	    
+	    $e->add_property( 'dtstart' => [ datestr_to_gmt($dts), { } ]);
+	    $e->add_property( 'dtend' => [ datestr_to_gmt($dte), { } ]);
+	    
+	    #$dts = get1propval($e,'dtstart');
+	    #$dte = get1propval($e,'dtend');
+	    #print "  tnad - output: dts= $dts  dte= $dte\n";
+	    
+	}
+    }
+}
+
+
+sub to_nokia_todo {
+    my $e = shift;
+
+    return unless ($e->ical_entry_type() eq "VTODO");
+    #print"to nokia vtodo convert _". summary($e) ."_ \n";
+
+    my $s = get1propval($e,'status');
+    #if (defined $s) {
+	#print "input status= $s\n";
+    #}
+
+    my $pc = get1propval($e,'percent-complete');
+    if (defined $pc) {
+	#print "input percent-complete= $pc\n";
+	
+	if ($pc ne '100') {
+	    rm_property($e, 'completed');  # if did at update would cause  endless re-sync as props go on/off 
+	}
+    }
+
+    my $cmpl = get1propval($e,'completed');
+    if (defined $cmpl) {
+	#print "input completed= $cmpl\n";
+
+	if (defined $s) {
+	    if ($s ne 'COMPLETED') {
+		set1propval($e,'status','COMPLETED');
+	    }
+	} else {
+	    $e->add_property( 'status' => [ 'COMPLETED', { } ] );
+	}
+    } else {
+	if (defined $s) {
+	    if ($s ne 'NEEDS ACTION') {
+		set1propval($e,'status','NEEDS ACTION');
+	    }
+	} else {
+	    $e->add_property( 'status' => [ 'NEEDS ACTION', { } ] );
+	}
+    }
+
+    return;
+
+# done here 
+
+    $s = get1propval($e,'x-status');
+    if (defined $s) {
+	print " x-status output = $s \n";
+	#$xs=1;
+    } else {
+	$s = get1propval($e,'status');
+	if (defined $s) {
+	    print " status output = $s \n";
+	} else {
+	    print "no status defined\n";
+	}
+	    
+    }
+
+    $pc = get1propval($e,'percent-complete');
+    if (defined $pc) {
+	print "output percent-complete= $pc\n";
+    }
+
+    $cmpl = get1propval($e,'completed');
+    if (defined $cmpl) {
+	print "output completed= $cmpl\n";
+    }
+
+}
+
+
+sub to_nokia {
+    my $e = shift;
+
+    to_nokia_allday($e);  
+    to_nokia_todo($e);  
+
+}
+    
+sub write_phone {
+    my $phone_set = shift;
+    my $dr_targ = shift;
+
+    print "write_phone\n" if ($verbose);
+    print " dry_run target = $dr_targ\n" if ($verbose and defined $dr_targ);
+
+    #foreach my $f ( sort keys %{ $phone_set } ) {
+	#next if ($f eq 'phone');
+	#open (OUTFILE, ">new_phone_dat/$f") 
+	    #or die "unable to open new_phone_dat/$f for write: $! \n";
+	#print OUTFILE ($phone_set->{$f})->as_string;
+	#close OUTFILE;
+    #}
+
+    if (not $dry_run) {
+	opendir(DIR,$cal_dir) or die "can't open dir $cal_dir: $!";
+	my $file;
+	while (defined($file = readdir(DIR))) {
+	    next unless ($file =~ /^\d+(_dup)?$/);
+	    next if (defined $phone_set->{$file}); 
+	    if (not defined $dr_targ)  {
+		syscmd("mv $cal_dir/$file $cal_bak_dir/$file");  # remove from sync dir those entries not in $phone_set
+	    } elsif ($dr_targ eq $file) {
+		print "would remove phone file $cal_dir/$file\n";
+	    }
+	}
+    } else {
+	print "  ... dry run only, skipping phone data remove and write\n";
+    }
+    
+
+    foreach my $f ( sort keys %{ $phone_set } ) {
+	next if ($f eq 'phone');
+
+
+	my $pcal = $phone_set->{$f};
+
+	my $prodid = get1propval($pcal,'prodid');
+	unless (defined $prodid) {
+	    #die "adding prodid to entry $f ?\n";
+	    $pcal->add_property( prodid => [ $prodid_str, { } ] );
+	}
+	
+
+	#my $e = phone_get_entry($f, $phone_set);
+
+	next unless ((exists $phone_mod{$f}) or (exists $phone_add{$f}));
+
+	to_nokia( phone_get_entry($f, $phone_set) );
+
+	my $outdat = ($phone_set->{$f})->as_string;
+
+	$outdat = filter_to_phone($outdat);
+
+
+	#print "outdat:\n$outdat\n";
+
+	if (defined $dr_targ) {
+	    if ($dr_targ == $f) {
+		print "write_phone would output: \n$outdat\n";
+	    }
+	} elsif (not $dry_run) {
+	    open (OUTFILE, ">$cal_dir/$f") 
+		or die "unable to open $cal_dir/$f for write: $! \n";
+	    print OUTFILE $outdat;
+	    close OUTFILE;
+	}
+    }
+}
+
+sub write_korg {
+    my $korg_cal = shift;
+
+    print "write_korg\n" if ($verbose);
+
+    if (not $dry_run) {
+	my $oldfile = "$korg_src".".last";
+	syscmd("mv $korg_src $oldfile");
+	open (OUTFILE, ">$korg_src") or die "unable to open $korg_src for write: $! \n";
+	print OUTFILE $korg_cal->as_string;
+	close OUTFILE;
+    } else {
+	print "  ... dry run only, skipping korganizer data write\n";
+    }
+
+}
+
+sub finish {
+    print "finish\n" if ($verbose);
+
+    open (LASTSYNC, ">$wrk_dir/last_sync") 
+	or die "unable to open $wrk_dir/last_sync for write: $! \n";
+    print LASTSYNC "$dt_now\n";
+    close LASTSYNC;
+}
+
+sub check_settings {
+
+    my $settings_ok=1;
+
+    set_times();
+
+    print "current state is :\n";
+    if (-d $wrk_dir) {
+	print "+ work dir $wrk_dir exists; ";
+	if (-e "$wrk_dir/last_sync") {
+	    read_last_sync();
+	} else {
+	    print "no last_sync file - will perform initial sync\n";
+	}
+	if (-e "$wrk_dir/bad_sync2") {
+	    read_bad_sync();
+	}
+
+    } else {
+	print "+ work dir $wrk_dir not found (would create)\n";
+    }
+
+    if (-d $cal_dir) {
+	print "+ calendar dir $cal_dir exists\n";
+    } else {
+	print "  calendar dir $cal_dir not found (would create)\n";
+    }
+
+    if (-r $korg_src) {
+	print "+ korganizer source file at $korg_src exists and is readable\n";
+    } elsif (-e $korg_src) {
+	print "- korganizer source file at $korg_src exists but is NOT readable\n";
+	$settings_ok=0;
+    } else {
+	print "- korganizer source file at $korg_src NOT FOUND\n";
+	$settings_ok=0;
+    }
+
+    if ($bt_mac eq "") {
+	print "- phone's bluetooth MAC address NOT set -- try 'sdptool browse'\n";
+	$settings_ok=0;
+    } else {
+	print "+ phone bluetooth MAC set to $bt_mac\n";
+    }
+
+    if ($bt_chan eq "") {
+	print "- phone's bluetooth channel for SyncMLClient NOT set -- try 'sdptool browse'\n";
+	$settings_ok=0;
+    } else {
+	print "+ phone bluetooth channel for SyncMLClient set to $bt_chan\n";
+    }
+
+    print "options:\n";
+
+    if ($rm_not_started_todo) {
+	print "  To-Do entries with start date in future will be saved in Korganizer but removed from phone\n";
+    }
+
+    if ($ignore_old_korg) {
+	print "  Korganizer entries more than $weeks_old week(s) old will not be sent to phone.\n";
+    }
+
+    if ($done_todos_korg_only) {
+	print "  Purging completed Todos on phone will not delete entry on Korganizer\n";
+	#  and Korganizer will not -add- completed todos to phone 
+    }
+    print "debug settings:\n";
+
+    if ($verbose) {
+	print "  vebose is true\n";
+    }
+
+    if ($dry_run) {
+	print "- writes disabled -- dry run only (considered not ok)\n";
+	$settings_ok=0;
+    }
+
+    if ($no_2nd_sync) {
+	print "- (2nd) sync of Korganizer data to phone disabled (considered not ok)\n";
+	$settings_ok=0;
+    }
+
+    print "\n";
+    print "datestr now= $dt_now     datestr old cutoff = $dt_old_cutoff \n\n";
+
+    return($settings_ok);
+}
+
+
+sub help {
+    
+    print "help!\n";
+
+    if (check_settings()) {
+	print "initial settings look ok\n";
+    } else {
+	print "settings not satisfactory for normal use\n";
+    }
+    
+
+}
+
+sub handle_args {
+    if ($#ARGV > -1) {
+	
+	for (my $argc=0; $argc <= $#ARGV; $argc++) {
+	    if ($ARGV[$argc] eq "--tu") {
+		$argc++;
+		if ($argc > $#ARGV) {
+		    die "--tu needs <UID> argument, see --help\n"; 
+		}
+		my $uid = $ARGV[$argc];
+		
+		print "searching for UID $uid\n";
+		$tu = $uid;
+		
+		set_times();
+		$korg_cal = load_korg_data();
+		$phone_set = load_phone_data();
+		
+		if (my $e = findUIDentry($uid,$korg_cal)) {
+		    print "\ntarget UID found on entry in korganizer data. process to phone:\n\n";
+		    print $e->as_string;
+		    
+		    print "\n";
+		    
+		    my $pk0 = findUID_phonekey($uid,$phone_set);  # in case we delete
+
+		    korg_clean_phone($korg_cal,$phone_set);
+		    korg2phone($korg_cal, $phone_set);
+		    
+		    if (my $pk = findUID_phonekey($uid,$phone_set)) {
+			print "target UID found in phone set after processing as $pk ";
+			if (exists $phone_mod{$pk}) {
+			    print "- set to output as modification:\n";
+			} elsif (exists $phone_add{$pk}) {
+			    print "- set to output as addition:\n";
+			} else {
+			    print "- would not be output to phone (unchanged):\n";
+			}
+			print "\n";
+			
+		    } else {
+			print "entry UID $uid was not added to phone set in normal processing.\n";
+		    }
+		    
+		    write_phone($phone_set, $pk0) if (defined $pk0);
+		    
+		    # reset :
+		    print "\nreloading phone and korganizer data to initial state\n";
+		    $korg_cal = 0;
+		    $phone_set = 0;
+		    $korg_cal = load_korg_data();
+		    $phone_set = load_phone_data();
+		} else {
+		    print "target UID $uid not found on entry in korganizer data\n";
+		}
+		
+		if (my $e = findUIDentry($uid,$phone_set)) {
+		    print "\ntarget UID found on entry in phone data, process to korganizer:\n\n";
+		    print $e->as_string;
+		    
+		    print "\n";
+		    phone_clean_korg($phone_set,$korg_cal);
+		    phone2korg($phone_set, $korg_cal);
+		    
+		    if (my $e = findUIDentry($uid,$korg_cal)) {
+			print "target UID found in korganizer data after processing, would write as:\n\n";
+			print $e->as_string
+		    } else {
+			print "entry UID $uid was not added to korganizer data in normal processing.\n";
+		}
+		    
+		    print "\n";
+		} else {
+		    print "target UID $uid not found on entry in phone data:\n";
+		}
+		
+		exit;
+		
+	    } elsif ($ARGV[$argc] eq "--help") {
+		help();
+		exit;
+	    } elsif ($ARGV[$argc] eq "--check") {
+		if (check_settings()) {
+		    print "initial settings look ok\n";
+		} else {
+		    print "settings not satisfactory for normal use\n";
+		}
+		exit;
+	    } else {
+		print "option ". $ARGV[$argc] ." not recognized\n";
+		help();
+		exit;
+	    }
+	}
+    }
+
+}
+
+###### main  ########
+
+my $phone_set;
+my $korg_cal;
+
+$SIG{__WARN__} = \&filter_known_warnings;
+
+handle_args();
+
+init();
+
+$korg_cal = load_korg_data();
+
+if ($dt_bad_sync2 eq "") {  # if no bad 2nd sync last time
+    if ($dt_last_sync ne "") {  # repeat sync
+	print "repeat sync\n" if ($verbose);
+	$phone_set = load_phone_data();
+	korg_clean_phone($korg_cal,$phone_set);
+    } else {  # first sync
+	unless (sync_phone()) {
+	    die "problem during initial phone sync, please see log messages (above) and try again.";
+	}
+	$phone_set = load_phone_data();
+	phone2korg($phone_set,$korg_cal);
+    }
+
+    korg2phone($korg_cal,$phone_set);
+
+    write_phone($phone_set);
+}
+
+unless ($no_2nd_sync) {
+
+    open (BADSYNC, ">$wrk_dir/bad_sync2")    # because sync can hang forever
+	or die "unable to open $wrk_dir/bad_sync2 for write: $! \n";
+    print BADSYNC "$dt_now\n";
+    close BADSYNC;
+
+    if (sync_phone()) {
+	syscmd("rm $wrk_dir/bad_sync2");
+    } else {
+	die "error on phone sync, please see messages above.  re-run to retry sync and continue.\n";
+    }
+}
+	
+
+$phone_set = load_phone_data();
+phone_clean_korg($phone_set,$korg_cal);
+phone2korg($phone_set,$korg_cal);
+write_korg($korg_cal);
+
+finish();
+
+print "normal termination.\n" if ($verbose);
+

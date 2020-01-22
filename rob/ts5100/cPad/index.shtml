@@ -1,0 +1,130 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Rob Miller">
+   <title>Linux driver for Synaptic cPad</title>
+</head>
+<body>
+
+<hr>
+<center><b><font size=+2>a Linux driver for the Synaptics cPad</font></b></center>
+<center>rob miller -- rob at janerob dot com</center>
+<p>
+<center>Check out the <a href="gallery">gallery</a>!</center>
+<p>
+<IMG SRC = "rcPad.jpg" height=350 width=350 align=right>
+<p>
+<b>News Flash</b> go to <a
+href="http://www.personal.uni-jena.de/~p1stja/linux/cpad.html"> Jan
+Steinhoff's page</a> for a driver that works with 2.6! (I'm using it!)
+<p>
+<a href="JanS/cpad.html">Here</a> is a local mirror of Jan's page, but
+check the link above to make sure my copy hasn't fallen out of date.
+<p>
+driver source: <a href="cpad_07.tar.gz">cpad_07.tar.gz</a> rpm: <a href="cpad-07-5rvx.src.rpm">cpad-07-5rvx.src.rpm</a>.<br>
+<br>&nbsp;
+<p>
+Newest contributions to the cPad pages are the cpad-0.7 rpms and these spiffy .xpm images contributed by
+Alessandro Zarrilli for use on your cPad under Linux (or Windows if you like ;-) <br>
+<IMG SRC = "kmfms.jpeg">
+<IMG SRC = "virusfree.jpeg">
+<br>
+Wish I could draw so well!  The xpms are <a href="kmfms.xpm">kmfms.xpm</a> and <a href="virusfree.xpm">virusfree.xpm</a>.
+<p>
+latest changes:<br>
+<li> significant clean-ups and enhancements by Ron Lee (0.7)
+<li> Dean Pentcheff contributed some more work improving motion sensitivity for fine movements -- see the 0.6 version
+<li> Xavier Granier contributed the source rpms
+<li> fixed motion sensitivity bug - caused DVD playback problems [thanks Michael Lloyd-Hart]
+<li> tap-and-drag, motion sensitivity ioctl [thanks Michael Lloyd-Hart]
+<li> set minimum mouse pressure (sensitivity) ioctl [thanks D. Banas!]
+<li> ** <b>minor device number now 66</b> ** (you probably need to rm /dev/usb/cpad0 and mknod again)</li>
+<li> flash backlight ioctl (usr_cpad -x) now works </li>
+<li> fixes suggested by usb-dev mailing list participants </li>
+<li> ioctls now clear response urbs </li>
+<li> added the xpixmap file to produce the display shown </li>
+<p>
+In addition to my 5100, users have reported this working on the 5105, 5105-S701, 5105-S901, 5200, 5200-801, 5205, and 5205-S703.
+Some 5200 folk (but not a -801 user) seem to need ehci (USB2.0) enabled and 'usb proc fs' compiled in.  If it works for your machine that's 
+not on this list, please drop me a line.
+<p>
+Install:
+<li>unpack the .tar.gz file</li>
+<li>make the modules/cpad subdir be /usr/src/modules/cpad (this is the driver)</li>
+<li>in /usr/src/modules/cpad do 'make' and 'make install'; if you have a problem the compile command is <br>'cc -Wall -O2 -L/usr/src/linux/lib -I/usr/src/linux/include   -c -o cpad.o cpad.c'</li>
+<li>get out of X</li>
+<li>I need to do: 'rmmod cpad mousedev hid input' (see the kernel setup info on my <a href="..">5100</a> page)</li>
+<li>modprobe cpad </li>
+<li> <b>or</b> just put 'cpad' in /etc/modules before hid/usbmouse and reboot if you're lazy but patient</li>
+<li>'modprobe mousedev' and start X if you like</li>
+<li>'mknod /dev/usb/cpad0 c 180 66' or use devfs </li> 
+<li>go to the supplied user subdir and compile with 'gcc -o usr_cpad usr_cpad.c'</li>
+<p>
+Assuming it worked you should be able to do './usr_cpad -h' and see:<br>
+<pre>
+usage: ./usr_cpad -&lt opt &gt &lt param &gt [&lt dev &gt] 
+  -i &lt file &gt  display 160x240 xpm file
+  -b &lt 1,0 &gt   backlight on/off
+  -c           read backlight state
+  -l &lt 1,0 &gt   lcd on/off
+  -m           read lcd state
+  -r           reset
+  -v           print driver version
+  -x &lt n &gt   backlight flash n * 10 msec
+  -s &lt n &gt   set minimum touch pressure
+  -t &lt n &gt   set mouse motion sensitivity
+  -d &lt n &gt   display load/temp/batt graphs every n secs
+</pre>
+<p>
+If you're using devfs the device may be somewhere other than /dev/usb/cpad0 -- look around ('find /dev | grep -i cpad' should
+do it), and specify the &lt dev &gt explicitly on the usr_cpad command line.
+<p>
+Please note that the <b>backlight has a finite lifespan</b>, something like 1000 to 3000 hours.  
+That's why the -x and flash ioctl is there.
+<p>
+The useful range for '-s' is something like 0-127, -t try 0-255
+<p>
+The '-d' option on usr_cpad needs the ACPI patch as described on my <a href="..">5100</a> page.  In other words, you should have /proc/acpi/battery/BAT1/info, /proc/acpi/battery/BAT1/state, and /proc/acpi/thermal_zone/THRM/temperature.  From right to left the bars are battery %, temperature, and a third bar will appear if the CPU load goes over 1.  The trace is of course the CPU load.  The backlight will flash if the temperature exceeds 68C or the battery falls below 20%.
+<p>
+I expect that your tastes in the info displayed may not be the same as mine, and I encourage you to poke around in usr_cpad.c and come up with your own view.  The line and bar drawing subroutines sould be pretty clear.  Drop me an e-mail with your masterpiece.    
+<p>
+You can vary the sensitivity, default minimum pressure, and length of time for a tap by modifying
+#defines in the driver -- see the comments.
+<p>
+The cpad.o module takes a parameter 'absmouse' which will cause the driver
+to report and work in 'absolute' mouse coordinates.  The correct way to 
+support the cPad is probably to have it work this way and have something like
+gpm translate into relative coordinates, but I chose to lie about it instead
+and keep the absolute coordinates internal to the driver.  Tap-to-click is
+not implemented for the absolute mouse, however both ways do report the 
+mouse pressure via the input device interface.
+<p>
+Yes, I would still like to be working on it, but we've moved to Abuja (Nigeria) and my 
+time is pretty happily filled up with bioinformatics research these days...  There are a 
+few folks working on modifications and improvements -- one I know about with some major enhancements, 
+others just drop me a few lines of code now and then.  I'd love to have any help you'd like to 
+contribute -- drop me a line!<br>
+<p>
+Especially good things to work on might be:<br>
+<li>send the image in 1 or 2 big URBs.</li>
+<li>port to 2.5 (then it might go into the kernel source).</li>
+<li>add a framebuffer device interface.</li>
+<p>
+The shape of things to come: <a href="http://people.debian.org/~ron/toshtoys">Ron's work</a>.
+<p>
+Check out Dietmar Kuehl's <a href="http://www.dietmar-kuehl.de/Xcpad/">Xcpad</a> X11 server that displays on the cPad! 
+<p>
+I've found two versions of .xpm format and made both work -- here's <a href="tux_bw.xpm">one</a> 
+and <a href="tux_bw_l.xpm">another</a> .
+</ul>
+<p>
+This page has been accessed 
+<!--#exec cgi="/cgi-bin/rcount.cgi" --> 
+times since 13 Nov 2002. 
+
+</dl>
+
+<br>&nbsp;
+</body>
+</html>

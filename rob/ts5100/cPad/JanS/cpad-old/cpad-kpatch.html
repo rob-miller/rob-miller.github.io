@@ -1,0 +1,27 @@
+<html>
+<head>
+<title>Synaptics cPad Linux driver for kernel 2.6</title>
+</head>
+<body>
+<h1>Kernel patches if you have more than one cPad</h1>
+If you have more than one cPad, add the following line to hid_blacklist[]
+before { 0, 0 } in file drivers/usb/input/hid-core.c in the Linux source:
+<pre>	{ 0x06cb, 0x0003, HID_QUIRK_IGNORE },</pre>
+And recompile usbhid.ko. Here are also some kernel patches which do the work
+for you:<br>
+<a href="linux-2.6.4-cpad.diff">linux-2.6.4-cpad.diff</a><br>
+<a href="linux-2.6.5-cpad.diff">linux-2.6.5-cpad.diff</a><br>
+<a href="linux-2.6.6-cpad.diff">linux-2.6.6-cpad.diff</a><br>
+<a href="linux-2.6.7-cpad.diff">linux-2.6.7-cpad.diff</a><br>
+<a href="linux-2.6.8-cpad.diff">linux-2.6.8-cpad.diff</a><br>
+<a href="linux-2.6.9-cpad.diff">linux-2.6.9-cpad.diff</a><br>
+<a href="linux-2.6.10-cpad.diff">linux-2.6.10-cpad.diff</a><br><p>
+To apply the patch, do
+<pre>
+	cat &lt;patchfile&gt; | patch -p1
+</pre>
+in the kernel source directory.
+
+<hr>E-Mail: <a href="mailto:jan.steinhoff@uni-jena.de">jan.steinhoff@uni-jena.de</a>
+</body>
+</html>

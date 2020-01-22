@@ -1,0 +1,4 @@
+BUS="usb", KERNEL="cpad[0-9]*", NAME="usb/%k", PROGRAM="/etc/udev/scripts/cpadsymlinks.sh cdev %k", SYMLINK="cpad/%c{1}/chardev"
+KERNEL="mouse[0-9]*", PROGRAM="/etc/udev/scripts/cpadsymlinks.sh input %k", SYMLINK="cpad/%c{1}/mouse"
+KERNEL="event[0-9]*", PROGRAM="/etc/udev/scripts/cpadsymlinks.sh input %k", SYMLINK="cpad/%c{1}/event"
+KERNEL="ts[0-9]*", PROGRAM="/etc/udev/scripts/cpadsymlinks.sh input %k", SYMLINK="cpad/%c{1}/ts"

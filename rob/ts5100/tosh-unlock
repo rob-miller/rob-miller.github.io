@@ -1,0 +1,10 @@
+#!/bin/sh
+vt=`cat /tmp/cons`
+loadkeys /tmp/keymap
+if [ -n $vt ]; then 
+    chvt $vt;
+else
+    chvt 7;
+fi
+echo "lcd_out: 1" > /proc/acpi/toshiba/video
+

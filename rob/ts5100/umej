@@ -1,0 +1,3 @@
+#!/bin/sh
+/bin/umount /cdrom >& /dev/null
+/usr/bin/eject 

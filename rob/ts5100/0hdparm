@@ -1,0 +1,2 @@
+#!/bin/sh
+hdparm -u 1 -d 1 -m 16 -c 1 -A 1 -a 32 -p 1 /dev/hda

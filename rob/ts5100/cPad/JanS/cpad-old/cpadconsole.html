@@ -1,0 +1,28 @@
+<html>
+<head>
+<title>cpadconsole</title>
+</head>
+<body>
+<h1>cpadconsole</h1>
+Latest: <a href="cpadconsole-0.1.tar.bz2">cpadconsole-0.1.tar.bz2</a><br>
+With this program you can send commands to the Seiko/Epson 1335 LCD Controller
+and see what happens. This tool should help developing programs for the cpad
+character device.
+<h2>Example</h2>
+The following example will bring the sed1335 to combined text/graph mode, display
+the image test.gif and the text "Hello World!". The image will flash at 16 Hz, so
+it seems to be gray.<br>
+Run cpadconsole and type in the following:
+<pre>sysset char_height=8
+display screen2=flash2 cursor=flash2
+cursorform shape=underscore
+overlay screen1=text
+scroll screen1=4800
+display on
+cursor 0
+writeimage test.gif
+cursor 4800
+writetext "Hello World!"</pre>
+<hr>E-Mail: <a href="mailto:jan.steinhoff@uni-jena.de">jan.steinhoff@uni-jena.de</a>
+</body>
+</html>

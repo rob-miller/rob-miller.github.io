@@ -1,0 +1,529 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Keywords" content="toshiba linux, linux satellite 5100-501, linux satellite 5100 linux satellite 5105-S607, linux satellite 5105">
+   <meta name="Author" content="Rob Miller">
+   <title>Linux on Toshiba Satellite 5100-501 / Satellite 5105-S607 and similar notebooks</title>
+</head>
+<body>
+
+<center><b><font size=+2>Linux on Toshiba Satellite 5100-501 / Satellite 5105-S607 </font></b></center>
+<center>rob miller -- rob at inpharmatica dot co dot uk</center>
+
+<!-- <p><center><b>this web page is still under construction</b></center></p> -->
+
+<br>October 2002
+<center>
+<hr WIDTH="100%"></center>
+
+<p>
+<IMG SRC = "satellite5105s607_350x350.gif" height=350 width=350 align=right>
+<p>
+<b><font size=+2>Contents</font></b>
+<ul>
+<li>
+<a href="#disclaim">Disclaimer:</a> Not me, guv...</li>
+
+<li>
+<a href="#overview">Overview:</a> What works, what doesn't, what I haven't tried</li>
+
+<li>
+<a href="#hwspecs">Hardware Specs:</a> Details of the 5100-501</li>
+
+<li>
+<a href="#swspecs">Software Specs:</a> Debian 3 (Woody), 2.4.18, XFree86 4.1.0 </li>
+
+<li>
+<a href="#display">Display:</a> 1600x1200 Nvidia X server, 1280x1024 framebuffer console, TV out, CRT out</li>
+
+<li>
+<a href="#kbdmouse">Keyboard & Mouse:</a> Minor details (sorry, no LCD yet...)</li>
+
+<li>
+<a href="#sound">Sound:</a> Alsa, intel ICH3</li>
+
+<li>
+<a href="#acpi">Toshiba modules / ACPI:</a> Motivation, kernel patch, Toshiba extras</li>
+
+<li>
+<a href="#dvd">DVD/CD/CDRW:</a> Making each work </li>
+
+<li>
+<a href="#hdisk">Disk Drives:</a> USB floppy, hard disk to full speed</li>
+
+<li>
+<a href="#connect">Connecting Up:</a> Ethernet, PCMCIA, IrDA (SIR), [Belkin USB-serial]</li>
+
+<li>
+<a href="#kernel">Kernel:</a> Review in case I missed anything</li>
+
+<li>
+<a href="#install">Linux Installation:</a> Getting loaded the first time</li>
+
+<li>
+<a href="#wxp">Windows XP partition:</a> Just leave it.
+
+<li>
+<a href="#likes">Likes:</a> Yes, I'd buy one again</li>
+
+<li>
+<a href="#dislikes">Dislikes:</a> Grrrrr....</li>
+
+<li>
+<a href="#still">Still Working On:</a> cPad display</li>
+
+<li>
+<a href="#files">Files:</a> Configuration examples</li>
+
+<li>
+<a href="#links">Links:</a> Other info, other sites</li>
+
+
+</ul>
+
+<p><br><a NAME="disclaim"></a><b><font size=+2>Disclaimer</font></b>
+<p>This is my best effort at documenting what I've done to get Linux running on my Toshiba Satellite 5100-501.
+What you do with the information, which may include errors, is fully your own responsibility.
+I assume you have basic Linux skills including the ability to configure, build and install your own kernel.
+Furthermore, my effort here is to supply information, not a turnkey solution for your system -- you may actually
+have to <b>look</b> at the configuration and other files I have supplied.  The files here have
+generally not been cleaned up.  
+<b>Use at your own risk.</b>  All trademarks are the property of their respective owners.
+<br>&nbsp;
+
+
+<p><a NAME="overview"></a><b><font size=+2>Overview</font></b>
+<p><b>Things I've got working:</b> faster hard disk, ACPI + some Toshiba extras, ethernet,
+1280x1024 framebuffer, 1600x1200 X windows, TV out, RGB out, DVD/CDRW, sound, 
+SIR IrDA (issues), PCMCIA CF, 'Toshiba' and 'Internet' buttons, middle mouse button, 
+serial (with a Belkin USB-serial).
+
+<p><b>Things that don't yet work:</b> power management suspend, trickery with the sub-lcds.
+
+<p><b>Things I haven't tried yet:</b> bluetooth, FIR IrDA, S/P DIF, SD or SmartMedia cards, winmodem, 
+1394 Firewire.
+<br>&nbsp;
+
+<p><a NAME="hwspecs"></a><b><font size=+2>Hardware Specs</font></b>
+</p><p>
+This <a href="t5105.pdf">document</a> from Toshiba describes the overall specification of the 5105-S607, which I believe
+to be the US version of the 5100-501 (without Bluetooth or the <a href="laptop_choices.html">'Treasure Island'</a> price).  
+Here's my <a href="dmesg.out">dmesg</a> output and <a href="lspcivv.out">lspci -vv</a> output for your perusal.
+Note that the IDE controller is <b>not</b> actually the Intel PIIX4 as reported by dmesg (or in the kernel config),
+it should be the 82801CAM -- but this needs a 2.5 kernel.  
+</p><p>
+The main points of interest for me are:
+<ul>
+<li> Pentium 4, 1.7Ghz, 512mb SDRAM</li>
+<li> 1600x1200 (UXGA) display, Nvidia NV17 GeForce4 440 Go controller with 32mb DDR RAM</li>
+<li> 40 Gb hard disk, ATA100 5400 rpm Toshiba MK4019GAX (not the GAP model as reported in a UK review)</li>
+<li> DVD/CD/CDRW combo drive, Toshiba SD-R2102
+<li> cPad trackpad with 3 mouse buttons </li>
+</ul>
+</p><p>
+Geeks like me may also care about:
+<ul>
+<li> Intel 82845 AGP bridge</li>
+<li> Intel 82801 CA/CAM interface controller used for:</li>
+  <ul>
+  <li> UHCI USB hub</li>
+  <li> SMSC LPC47N227 SuperIO chip on LPC interface (apparently only IrDA is used)</li>
+  <li> IDE U100 disk interface</li>
+  <li> AC'97 Audio controller (i810 chipset)</li>
+  <li> AC'97 Modem (Toshiba)</li>
+  <li> EtherExpress PRO/100 VE ethernet</li>
+  </ul>
+<li> ToPIC95 Toshiba Cardbus bridge (PCMCIA for us oldies)</li>
+<li> TI TSB43AB22 Firewire (IEEE 1394) controller</li>
+</ul>
+See the <a href="dmesg.out">dmesg</a> and <a href="lspcivv.out">lspci -vv</a> output for more info.
+<br>&nbsp;
+<p><a NAME="swspecs"></a><b><font size=+2>Software Specs</font></b>
+<p>Information on this web page is based on the following configuration:
+<ul>
+<li> <a href="http://www.debian.org">Debian</a> Linux 'Woody' release (Debian 3)</li>
+<li> kernel <a href="http://www.kernel.org">2.4.18</a></li>
+<li> <a href="http://www.xfree86.org">XFree86</a> version: 4.1.0.1</li>
+</ul> 
+I recommend nothing less.  
+<br>&nbsp;
+<p><a NAME="display"></a><b><font size=+2>Display</font></b>
+
+<p>(update 21 Aug 02) 
+
+<p>I don't think there is a UXGA (1600x1200) server option for this system other than the server from 
+<a href="http://www.nvidia.com/view.asp?PAGE=linux">Nvidia</a>.  The drawbacks are that this 'taints'
+the kernel with a non-GPL module, that -currently- there is no power management support 
+(so suspend/resume breaks right here), and that it won't work with the 2.5 kernels.  On the positive side, 
+TwinView (for TV and RGB output) and the framebuffer interaction works, plus it's fast and pretty.  
+</p><p>
+Here's my <a href="XF86Config-4">XF86Config-4</a> file.  In addition to the more technical features, I've
+set the 'NoLogo' option to skip the Nvidia splash screen and set 'DigitalVibrance' to 2 (range is 0-4).  
+Check out the <a href="http://download.nvidia.com/XFree86_40/1.0-28880/README.txt">Nvidia README</a> to 
+learn more options.
+</p><p>
+<b>TV out:</b> The config file above is set up to display on both the TV and LCD panel at 800x600 when/if
+you (re)start the X server with the TV output connected.  TV sound works as well.  J. Belmonte's next release 
+should support TV out as a video option through the /proc/acpi/toshiba interface.
+
+</p><p>
+<b>RGB out:</b> RGB output is a little trickier (or really simple -- just reboot with the monitor plugged in).  
+To have software control, you need to install John Belmonte's 
+<a href="http://memebeam.org/toys/ToshibaAcpiDriver">Toshiba Extras</a> ACPI module kernel patch.  Switching 
+puts the console on the external monitor as well 
+as the X server, however the default setup above has TwinView using 800x600 when enabled.  To get the full 
+resolution, you need to select the second ServerLayout by starting with "startx -- -layout CRT".  You can switch 
+the XF86Config-4 file ServerLayout sections around so that the RGB TwinView is the default rather than the TV support 
+and thus use xdm, but that's left as an exercise to the reader (see the comments in the file).  As noted on J.
+Belmonte's pages, you should go to the console, switch LCD/CRT, and then go back to X.  Sometimes doing this I get
+to a state where the LCD panel can't sync on the console framebuffer, but no big deal as the external monitor is there
+after all.
+</p><p>
+<b>Framebuffer:</b> Compile the VESA framebuffer into the kernel, and put vga=0x31a (1280x1024 at 16 bits color) 
+into your <a href="lilo.conf">lilo.conf</a>.  See the 
+<a href="http://www.tldp.org/HOWTO/Framebuffer-HOWTO.html">framebuffer howto</a>.  You may need to convert that to a decimal value for older lilo's.  
+I think you also need the <a href="XF86Config-4">XF86Config-4</a> file's Frame Buffer section in order to 
+switch between X and the console.  No, TV out (at least to my TV :-) won't handle the 1280x1024 framebuffer, I just go back to 
+vga=extended.
+</p><p>
+Extra thanks to macemoneta on the <a href=http://forums.compuserve.com/vlforums/default.asp?SRV=Toshiba&loc=us&access=public">Compuserve Toshiba list</a> for supplying his XF86Config-4 file, which was the basis 
+for most of this.
+</p><p>
+If you do need to switch around between console and X while using the CRT or TV out, my findings are that you need 
+to re-start X with the alternate video already plugged in.  Presumably this is because the Nvidia driver will be accessing the
+graphics chip directly, independent of the Toshiba BIOS (HCI) commands used by the /proc/acpi interface.
+<br>&nbsp;
+<p><a NAME="kbdmouse"></a><b><font size=+2>Keyboard & Mouse</font></b>
+<p>
+There's an annoying key repeat problem under X windows, my solution is to use 'xkbset' as well as a 
+special keymap (Xmodmap) to enable the 'windows' and 'menu' keys for use as extra mousebuttons.  
+<a href="http://rooster.stanford.edu/~ben/toshiba/keyboard.php">Ben Lynn's site</a> explains that the spurious keypresses
+have the characteristic that the keyrelease is <b>immediate</b>, thus we can use an XKB preference called 'SlowKeys' to 
+allow only keypresses that last a minimum length of time.  Another XKB preference disables the bell that this setting
+enables.  Next, one requires software to work with the XKB API and manage these features; I use 
+<a href="http://www.math.missouri.edu/~stephen/software/#xkbset">xkbset</a>
+by Stephen Montgomery-Smith (also in <a href="http://packages.debian.org/unstable/x11/xkbset.html">Debian unstable</a>).
+Under Debian, I place this <a href="40custom-rtm">script</a> in /etc/X11/Xsession.d to implement the key fix for 
+all users (and - I think - the xdm login) as well as load my <a href="Xmodmap">Xmodmap</a> file.
+</p><p> 
+The mouse is USB, thus the 'USB Human Interface Device (full HID) support' is recommended, and see the 
+<a href="XF86Config-4">XF86Config-4</a> file for the protocol.  I haven't made any effort to set up gpm thus far.
+</p><p>
+If you load my <a href="cpad.tar.gz">cPad</a> driver module, you can get the middle mouse button working (and won't need 
+the hid module above).  See
+<a href="http://memebeam.org/toys/ToshibaAcpiDriver">John Belmonte's</a> toshiba_acpi work to use/access the 'Toshiba' 
+and 'internet' buttons next to the power button.
+</p>
+
+<br>&nbsp;
+<p><a NAME="sound"></a><b><font size=+2>Sound</font></b>
+<p>Sound options are either the i810 code that comes with the kernel distribution, or the Advanced Linux 
+Sound Architecture (<a href="http://www.alsa-project.org">ALSA</a>) software distribution.  Here's some random
+hints which may be useful either way:
+<ul>
+<li>The <a href="http://xine.sourceforge.net">Xine</a> DVD player needs ALSA</li>
+<li>I've read that you need the <a href="http://sourceforge.net/projects/acpi">ACPI</a> patch to get sound working on
+this system -- I can't confirm that, but I do use the patch.</li>
+<li>On at least two occasions I achieved a state in which sound was not working and then began to work after booting
+into WindowsXP.  One of these was after the battery had run down completely.  Possibly WXP initialises something that
+the Linux side does not, however I've not seen this happen for some time.</li>
+<li>If you build ALSA from source, the mixer levels are set to '0' and muted by default.  Run alsamixer, use the arrow keys
+to adjust the levels (resolution is a function of the window you run in), use the 'm' key control muting.  Here's my 
+<a href="asound.state">/etc/asound.state</a> file to try if you can't work out what needs to be enabled to get some noise out.</li>
+<li>If you go with the Debian binaries, I found the default sound levels to be set too high (in the red), causing distortion.</li>
+<li>If you want both the kernel and the ALSA options, modularise the kernel drivers.  You must build both 'Sound Card Support'
+and 'Intel ICH (i8xx) audio support' as modules.  If you don't build 'Sound card support' as a module, you'll see the error
+"alsamixer: function snd_ctl_open failed for default: No such file or directory" when you try to set sound levels with alsamixer.</li>
+<li>If you build ALSA from source, start with 
+"<font face="Courier New,Courier">./configure  --with-sequencer=yes  --with-oss=yes --with-cards=intel8x0</font>" as suggested 
+by <a href="http://www.condorito.org/Toshiba">Nicolas Beaulieu</a>.</li>
+</ul>
+<p>
+<br>&nbsp;
+<p><a NAME="acpi"></a><b><font size=+2>Toshiba modules / ACPI</font></b>
+<p>(update 21 Aug 02) 
+<p> As noted above, I'm using the <a href="http://sourceforge.net/projects/acpi">20020709</a> ACPI patch. The benefits are
+at least some of the following:
+<ul>
+<li>ALSA (sound) works</li>
+<li>pressing the 'power' button for less than 4 seconds halts the system nicely</li>
+<li>/proc/acpi contains a subdirectory with CPU temperature in celsius rather than kelvin (read by a KDE app called aKpi).</li>
+</ul>
+Also as noted above, I'm using John Belmonte's <a href="http://memebeam.org/toys/ToshibaAcpiDriver">Toshiba Extras</a> kernel
+patch/module, which is based on the work of <a href="http://www.buzzard.org.uk/toshiba">Jonathan Buzzard</a>.  
+John B. should have a new release out soon which works more easily against an 
+ACPI-patched 2.4 kernel than what I described here previously.  The benefits here are (will be):
+<ul>
+<li>fan control</li>
+<li>LCD brightness control</li>
+<li>enable console on external RGB monitor</li>
+<li>enable console TV out</li>
+<li>enable sysevent fifo to see 'toshiba' and 'internet' buttons</li>
+</ul>
+<p>There's also the <a href="http://www.buzzard.org.uk/toshiba">Jonathan Buzzard</a> toshiba.o module (toshutils) already in the
+kernel source tree, this will only work if you exclude <b>all</b> the ACPI code from the kernel.  In this case, load the module
+with the option "tosh_fn=0x62" to get the hotkeys (function keys) working.  Alternatively, and still subject to the ACPI problem
+as far as I know, try Charles Schwieters' <a href="http://www.schwieters.org/toshset/">toshset</a> utility (works without 
+toshiba.o).  I have heard that the problem with ACPI is not present in the 2.5 kernels.
+
+</p><p>At one time I added the patch to enable <a href="http://falcon.sch.bme.hu/~seasons/linux/swsusp.html">swsusp</a> in the
+2.4 kernel (it's been accepted into 2.5).  This is a fully Linux solution to suspending to the disk swap partition, and worked very 
+well -- except that the Nvidia X server doesn't appear to support any sort of power management commands, so my goal of being able to 
+resume where I'd left off was trashed.  There was also some problem with the Intel e100 ethernet driver, but I didn't look into it 
+once I realised that this wouldn't cut it.  
+
+</p><p>If you surf about the web for Linux ACPI you'll find that there's still a bit of work remaining to be done.  Hopefully in 2.6!
+
+<br>&nbsp;
+<p><a NAME="dvd"></a><b><font size=+2>DVD/CD/CDRW</font></b>
+<ul>
+<li><b>DVD:</b> The main trick here is to build the kernel with the UDF file system (module is fine).  Beyond this, I was using 
+the <a href="http://xine.sourceforge.net">Xine</a> DVD player (needs ALSA) with the DivX codec, but now (14 Aug 02) I also use 
+<a href="http://www.dtek.chalmers.se/groups/dvd">Ogle</a> for ease of set-up for things I didn't have working with xine.  
+Note I link /dev/dvd to /dev/scd0.  Check out 
+<a href="http://www.condorito.org/Toshiba/#dvd">NB's page</a> for more on both players.  I don't yet have the 
+TOSLINK to optical minijack adapter to try the S/P DIF (Dolby digital AC-3) output, but the ALSA docs indicate that it isn't
+supported for this chipset.  </li>
+<li><b>CDRW:</b> This is just as described in the <a href="http://www.tldp.org/HOWTO/CD-Writing-HOWTO.html">CD-Writing howto</a>, you need to enable SCSI emulation, SCSI CDROM, and the CDROM 
+filesystem(s) in the kernel (modules ok), then append "hdc=ide-scsi" in your <a href="lilo.conf">lilo.conf</a>. </li>
+</ul>
+<br>&nbsp;
+<p><a NAME="hdisk"></a><b><font size=+2>Disk Drives</font></b>
+<ul>
+<li><b>floppy disk:</b> this is another USB device, enable "USB Mass Storage support" and "SCSI disk support" in the kernel, then the 
+device on my system is /dev/sda0 (see my <a href="fstab">/etc/fstab</a> sampling).</li>
+
+<li><b>hard disk:</b> (update 14 Aug 02) enable 'use PCI DMA by default when available' in the kernel, this seems to do away with
+the need for either the <a href="0hdparm">hdparm script</a> or the lilo options (ide0=dma).  
+<!--you'll see the appended "idebus=66" in my <a href="lilo.conf">lilo.conf</a>, but I don't think this actually
+does anything.  The real speed-up comes from turning on DMA ASAP during the boot process with the statement "ide0=dma".  I also 
+set several features with hdparm in <a href="0hdparm">this file</a>, which goes in my /etc/rc.boot directory (place as appropriate for
+your distribution) [<b>not for 2.5</b> kernel]. --> I use and recommend the ext3 filesystem.</li>
+</ul>
+<br>&nbsp;
+<p><a NAME="connect"></a><b><font size=+2>Connecting Up</font></b>
+</p><p>Except for the ethernet, this section is all about connecting up to my <a href="http://www.handera.com">TRGpro</a> (essentially a Palm IIIxe with Compact Flash).
+<ul>
+<li><b>ethernet:</b> the kernel 'EtherExpressPro/100 support' has only worked for me when compiled into the kernel (not as a module),
+but I only worked that out long after I switched to using the 
+<a href="http://downloadfinder.intel.com/scripts-df/Detail_Desc.asp?ProductID=61&amp;DwnldID=2896">Intel e100 driver</a>.  
+Under 2.4 (not 2.2) kernels the 'beat detection' works, so programs like Debian's <a href="http://packages.debian.org/testing/admin/laptop-net.html">laptop-net</a> respond to plugging in the cable.</li>
+<li><b>PCMCIA:</b> The kernel-based PCMCIA didn't work for my CF card, so I continue to use the external <a href="http://pcmcia-cs.sourceforge.net">PCMCIA</a> code, current 
+version 3.1.34.</li>
+<li><b>IrDA SIR:</b> "X Windows, PCMCIA CF, IrDA SIR -- choose any two."  Try my <a href="irda.html">IrDA instructions</a> to 
+initialise the 82801CAM and SMSC 47N227 chips as a serial COM port and use with pilot-link for Palm IR file transfers.  The 47N227 works with the 'SMC IrCC' kernel driver.  Unfortunately, 
+with the 2.4 kernel this only seems to work on irq 3 -- and this is needed for the PCMCIA IDE support to see the Compact Flash 
+card as a disk (a cheap adapter allows you to plug CF into PCMCIA slots).  The 2.5 kernels have the correct support for the 
+82801CAM chip to pile all the PCI interrupts together -- so this should no longer be a problem -- but the Nvidia X server won't 
+compile or install with a 2.5 kernel.  Guess that's another feature for 2.6...</li>
+<li><b>serial:</b> so I got a used Belkin USB-serial converter (for £12!) and went back to using the cradle for "quick" pilot-link 
+Palm file installs.
+I only mention it here because I had to work out that the thing to do is add a script containing "stty -F /dev/ttyUSB0 57600" 
+to be called as a "post-install" for the belkin_sa module (in other words, have it set the default serial port speed when the 
+module is hotplug-loaded on plugging in to the USB; also note it's tty<b>USB</b>0, and doesn't pick up the $PILOTRATE environment
+variable).</li>
+</ul>
+<br>&nbsp;
+<p><a NAME="kernel"></a><b><font size=+2>Kernel</font></b>
+</p><p>Here's my kernel <a href="config">.config</a> file.  Of particular note:
+<ul>
+<li><b>Processor type and features</b>: I build the Toshiba code as a module, I may keep playing with it; MTRR works, 
+and I enable Local and IO APIC support even though it doesn't recognise the 82801.</li>
+<li><b>General setup</b>: Enable PCI support, PCI name database (upgrade to the latest at <a href="http://pciids.sourceforge.net">http://pciids.sourceforge.net</a>).  Enable support for hot-pluggable devices (USB also uses) but no PCMCIA (for me -- see <a href="#connect">connecting</a>) or PCI Hotplug code.  Power Management support yes.
+<ul>
+<li><b>ACPI</b>: I build in everything except 'CPU Enumeration (no) only' and 'Toshiba Laptop Extras' (build as module).  Remember 
+that I only have these options because I've patched with both the ACPI and John Belmonte Toshiba code (see the <a href="#acpi"> ACPI comments</a>).</li>
+</ul>
+<li><b>MTD, par port, PnP</b>: no.</li>
+<li><b>Block devices</b>: don't need Normal PC floppy, do need loopback dev support as module for testing CD images.</li>
+<li><b>IDE, ATA ...</b>: IDE CDROM built in, SCSI emulation as a module; Intel PIIXn chipset as it works, 82801 support
+in 2.5.  </li>
+<li><b>1394</b>: haven't tried it -- send me something to use it with ? :-)</li>
+<li><b>IrDA</b>: see my <a href="#connect">connecting</a> comments; I module/enable everything plus drivers IrTTY, IrPORT 
+and SMC IrCC.</li>
+<li><b>Input core support</b>: yes, for USB mouse; I enable the Event interface in hopes of cPad play.</li>
+<li><b>Character devices</b>: Mice no (not needed for USB mouse).
+<li><b>File systems</b>: yes, you want to use Ext3; it's easy to switch.  ISO9660 plus extensions for CD work, /proc, 
+UDF needed for DVDs.</li>
+<li><b>Console drivers</b>: VESA frame buffer enabled here.</li>
+<li><b>Sound</b>: modularise both 'Sound card support' and 'Intel ICH (i8xx)' if you want to be able to use this or ALSA.</li>
+<li><b>USB</b>: Preliminary USB device filesystem; UHCI alternate driver; USB Mass Storage support for the floppy,  full HID support for the mouse.</li>
+<li><b>Bluetooth</b>: haven't tried it -- send me something to talk to ? :-)</li>
+</ul>
+</p><p>You may also want to see my <a href="modules.conf">/etc/modules.conf</a> and <a href="modules">/etc/modules</a> files.
+<br>&nbsp;
+<p><a NAME="install"></a><b><font size=+2>Linux Installation</font></b>
+</p><p> The easiest way to get an install started was to download the disk images from the Debian distribution
+subdirectory dists/woody/main/disks-i386/ into a directory on the Windows XP partition.  Then boot from a DOS
+floppy and use the loadlin program (through install.bat) as found in the Debian tools subdirectory.  Drop me a line if
+you know a tweek for the XP 'command prompt only' boot mode to give it enough memory to run loadlin.  Check 
+your local <a href="http://www.debian.org/misc/README.mirrors">mirror</a> of ftp://ftp.debian.org/debian 
+to find these files.
+</p><p>The boot device can be selected at power-on or reboot: be holding down the left or right arrow key when
+the Toshiba splash screen shows.  This will pause the boot procedure until you hit [enter], booting from the 
+selected icon (hdd, cd, fdd, network, PC card ATA device).
+<br>&nbsp;
+
+<p><a NAME="wxp"></a><b><font size=+2>Windows XP partition</font></b>
+</p><p>The system comes with two formatted VFAT partitions, with Windows XP Home installed on the first.  
+I suggest that you don't trash the Windows XP partition for the following reasons:
+<ul>
+<li>This is a '<a href="http://www.microsoft.com/hwdev/NewPC/legacyIO.htm">legacy free</a>' system, 
+thus the definitive Toshiba BIOS manipulation software -- e.g. to set boot device order, or set the owner
+string in the subLCD  -- (currently) only runs here.</li>
+<li>Might be the only way to get digital sound (S/P DIF) out for the DVD.</li>
+<li>Even after <a href="#install">installation</a>, it's useful to have a Linux system that you can get
+to with just a DOS boot floppy for those times when you really mess up. :-) </li>
+<li>It's the only way to check that the hardware really works, and see how.</li>
+<li>If you don't convert to NTFS, the disk space remains available through VFAT. </li>
+<li>The Toshiba recovery CD supports (with many "Advanced User Only!" warnings) partition-only recovery and 
+recognises Linux partitions.
+</ul>
+<br>&nbsp;
+<p><a NAME="likes"></a><b><font size=+2>Likes</font></b>
+</p><p>It works as well (almost!) as I had hoped, and lived up to the <a href="laptop_choices.html">expectations</a>
+ I'd developed from researching on the net.  Certainly all of the "core" Linux functionality is working.
+<ul>
+<li>The case build is brilliant.  Everything works, feels solid, no creaks, the doors don't pop off or look 
+like they will.</li>
+<li>The UXGA display is everything I'd hoped for.  There are no dead pixels, 
+<li>It feels fast.</li>
+<li>The recovery CD is as Linux friendly as would be reasonably expected.</li>
+<li>Having used it over 3 months now, the keyboard feels good and is "easy to type fast on".  
+</ul>
+<br>&nbsp;
+<p><a NAME="dislikes"></a><b><font size=+2>Dislikes</font></b>
+</p><p>
+<ul>
+<li>I need a suspend/resume facility, but currently I see this as an Nvidia problem.</li>
+<li>It appears that Toshiba declined to supply the wires or external connectors for hardware that I believe
+exists internally:
+<ul>
+<li>no S-Video (S-VHS) out -- I think it loses the "desktop replacement" label here for not supplying full 
+quality DVD playback.
+<li>the SMSC 47N227 supplying the IR also has (by the <a href="http://www.smsc.com/main/datasheet.html">documentation</a>) 
+serial, parallel and FDC ports -- "legacy free" indeed...</li>
+</ul>
+I would have provided a proprietary external connector and "extra ports" accessory, but I can understand the
+economic argument that serial and parallel ports are available as a USB dongle for Windows users, and perhaps a videophile
+1394 solution as well.  I would prefer to have a standard serial port and S-Video output with a converter down to 
+composite.</li>
+<li>It's a bit hot (as I expected from the net) -- just slightly warmer than I'd prefer when using it for 2-3 hours
+on my lap (I may feel differently in winter :-).  The CPU temperature while editing this has ranged from 60-70 C 
+(fan comes on at 70).
+I'm currently experimenting with various low density materials 
+to use as insulating/cooling "lap tables" (if you're in the London area check out WRAP -- Watford Recycling Arts 
+Project -- for a range of things to try).
+<li>There appears to be no interface available (even under Windows) to <i>really</i> save battery power when off.  Specifically
+the ethernet active LED, the PC-off CD player facility (it can be locked off manually after shutdown), and the small
+LCD (trivial consumption) all stay on.  The upshot is that the "shelf life" to a completely dead battery when turned off seems short (2-3 days if I recall correctly).  </li>
+<li>It would be useful to be able to access the Synaptics features like "ignore light brushes on the touchpad".</li>
+<li>I've yet to work out access to the cPad LCD, etc. features.
+<li>I would prefer to have direct BIOS access; although rarely accessed, it would make some things easier.
+An OS-neutral solution would be to publicly document the API available for setting up the PC hardware.</li>
+</ul>
+<br>&nbsp;
+<p><a NAME="still"></a><b><font size=+2>Still Working On</font></b>
+<ul>
+<li><b>cPad</b>: an entertaining toy -- I'll keep playing with it (hmmm, sysmon?).  
+<a href="http://sourceforge.net/projects/usbsnoop/">SnoopyPro</a> is useful here.</li>
+</ul>
+<br>&nbsp;
+<p><a NAME="files"></a><b><font size=+2>Files</font></b>
+<table>
+<tr>
+<td> <a href="cpad.tar.gz">cPad_driver</a> </td>
+<td> <a href="dmesg.out">dmesg</a> </td>
+<td> <a href="lspcivv.out">lspci -vv</a> </td>
+<td> <a href="XF86Config-4">XF86Config-4</a></td>
+<td> <a href="lsusb.out">lsusb</a> </td>
+</tr>
+<tr>
+<td> <a href="lilo.conf">lilo.conf</a></td>
+<td> <a href="40custom-rtm">X-keyboard script</a></td>
+<td> <a href="Xmodmap">user Xmodmap</a></td>
+<td> <a href="asound.state">/etc/asound.state</a></td>
+<td> <a href="hdparm.out">hdparm -i /dev/hda</a></td>
+</tr>
+<tr>
+<td> <a href="fstab">/etc/fstab</a></td>
+<td> <a href="0hdparm">/etc/rc.boot/0hdparm</a></td>
+<td> <a href="config">/usr/src/linux/.config</a></td>
+<td> <a href="modules.conf">/etc/modules.conf</a></td>
+<td> <a href="modules">/etc/modules</a></td>
+</tr>
+</table>
+
+<br>&nbsp;
+<p><a NAME="links"></a><b><font size=+2>Links</font></b>
+<br>&nbsp;
+
+</p><p>
+Toshiba 5005 pages:
+<ul>
+<li><a href="http://rooster.stanford.edu/~ben/toshiba/">Ben Lynn</a></li>
+<li><a href="http://www.mobilix.org/toshiba_s5005_s504.html">Marco Trevisani</a></li>
+<li><a href="http://www.condorito.org/Toshiba/">Nicolas Beaulieu</a> -- thanks for the page format!</li>
+<li><a href="http://www.garg.com/bob/sftw/toshiba_5005_S507.html">Bob Van Cleef</a></li>
+</ul>
+
+</p><p>
+Toshiba-spcific Linux utilities:
+<ul>
+<li><a href="http://www.buzzard.org.uk/toshiba/">Jonathan Buzzard</a></li>
+<li><a href="http://memebeam.org/toys/ToshibaAcpiDriver">John Belmonte</a> (ACPI) </li>
+</ul>
+
+</p><p>
+Drivers:
+<ul>
+<li><a href="http://downloadfinder.intel.com/scripts-df/Detail_Desc.asp?ProductID=61&amp;DwnldID=2896">Intel e100 driver</a>  </li>
+<li><a href="http://www.nvidia.com/view.asp?PAGE=linux">Nvidia</a> </li>
+<li><a href="http://pcmcia-cs.sourceforge.net">PCMCIA</a> </li>
+<li><a href="http://sourceforge.net/projects/acpi">ACPI4Linux</a></li>
+<li><a href="http://www.alsa-project.org/">ALSA</a></li>
+</ul>
+
+</p><p>
+Toshiba Support sites:
+<ul>
+<li><a href="http://linux.toshiba-dme.co.jp/linux/index.htm">Linux for Toshiba PCs</a> (Japan)</li>
+<li><a href="http://newsletter.toshiba-tro.de/main/index.html">Installation Infos</a> (Germany)</li>
+</ul>
+
+</p><p>
+Mailing lists (see also the Japan site above):
+<ul>
+<li><a href="http://putland.linux-site.net/mailman/listinfo/toshiba-5005">Toshiba-5005</a></li>
+<li><a href="http://forums.compuserve.com/vlforums/default.asp?SRV=Toshiba&loc=us&access=public">Compuserve forum</a></li>
+</ul>
+
+</p><p>
+Suggested software:
+<ul>
+<li><a href="http://www.math.missouri.edu/~stephen/software/#xkbset">xkbset</a></li>
+<li><a href="http://xine.sourceforge.net/">Xine</a></li>
+<li><a href="http://www.dtek.chalmers.se/groups/dvd">Ogle</a></li>
+</ul>
+
+</p><p>
+More info:
+<ul>
+<li><a href="http://www.smsc.com/main/datasheet.html">47n227 datasheet</a> <li>
+<li><a href="http://www.intel.com/design/chipsets/datashts/290716.htm">82801CA/CAM datasheet</a><li>
+<li><a href="http://www.linux-usb.org">Linux USB</a></li>
+<li><a href="http://www.tldp.org">The Linux Documentation Project</a></li>
+</ul>
+
+</p><p>
+And of course:
+<ul>
+<li><a href="http://www.linux-laptop.net/">Linux on Laptops</a><li>
+</ul>
+
+<p><br>
+<hr WIDTH="100%">
+<br>rob miller -- <b>rob</b> at <b>inpharmatica</b> dot <b>co</b> dot <b>uk</b>
+<br>August 2002
+</body>
+</html>

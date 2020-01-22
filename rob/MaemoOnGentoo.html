@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <meta content="text/html; charset=ISO-8859-1"
+ http-equiv="content-type">
+  <title>Installing Scratchbox, Maemo Bora etc. on Gentoo</title>
+  <meta name="Keywords"
+ content="nokia, maemo sdk, gentoo, scratchbox, overlay">
+</head>
+<body>
+<br>
+
+I'm getting a Nokia N800 soon, thought I would install the devkit.
+Mostly it went ok, but there were a few problems that I hope I can
+help others avoid...
+<br>
+Particularly helpful was <a
+href="http://amd.store20.com/blog/category/gentoo/">plaes.org Gentoo
+archive</a>.  the key bits here were:
+<br>
+<ul>
+<li> install Xephyr by enabling kdrive USE flag for xorg-server.</li>
+<li> use the <a href="http://overlays.gentoo.org/proj/sunrise">sunrise
+overlays</a> to install scratchbox.  check the link if you've not used
+overlays before.</li>
+</ul>
+
+<br>
+the specific instructions for the emerge are:
+<br>
+
+<pre>
+USE="arm i386" emerge -pv scratchbox \
+scratchbox-devkit-debian scratchbox-devkit-perl \
+scratchbox-devkit-cputransp  scratchbox-devkit-doctools  \
+scratchbox-toolchain-cs2005q3_2-glibc
+</pre>
+
+to make this work add the ~x86 flag for sys-devel/scratchbox etc in
+/etc/portage/package.keywords
+
+<br>
+
+problems I ran into that are probably more related to the scratchbox
+install:
+
+<ul>
+<li> start scratchbox - /etc/init.d/scratchbox </li>
+<li> maemo install scripts needed /opt/scratchbox/sbin/chroot-uid to
+be setuid root (chmod +s '/opt/scratchbox/sbin/chroot-uid). </li>
+<li> maemo install scripts couldn't create /scratchbox/ccache/ - but
+ok when I created as root.</li>
+</ul>
+
+
+I was concerned about the various "Run 'apt-get update' inside
+scratchbox to read package index files." messages.  gentoo doesn't
+have apt-get, but turned out it is ok as this is part of the maemo
+install.
+<br>
+<br>
+problem was, apt-get calls in the install scripts failed because site
+names wouldn't resolve.  the solution was to copy my /etc/resolv.conf
+to /scratchbox/etc/ .  
+<br>
+<br>
+
+actually running the maemo scripts:  (<a href="http://repository.maemo.org/stable/bora/INSTALL.txt">maemo install.txt</a>)
+
+<br> 
+<br>
+I didn't do the maemo-scratchbox-install_3.1.sh script, assuming that
+the gentoo emerge had done it all.
+<br>
+<br>
+due to the various problems above, maemo-sdk-install_3.1.sh did not
+complete.  on some of the early errors it would restart, but
+eventually it thought everything was there and then said "run with -f
+to redownload the files", and exited.  this seems to be an error in
+the script, if you pass it the -c option it shouldn't dump out.  I
+commented out the 'exit 1' at this point in the script and let it
+carry on.
+
+<br>
+<br>
+
+I didn't have to do the virtual packages stuff from the plaes.org page
+as the install script (eventually) got all the way through, thus on to
+section 3.3 in the install instructions.
+<br>
+<br>
+note that once you get this far, or maybe if you don't and you're
+trying to figure things out, you get "inside scratchbox" with
+/scratchbox/login.  somewhere along the way on the scripts it dies
+because you've not created a user account, but that's fixed by the
+time you get here.  to change between X86 and ARM environments it is
+'sb-conf select SDK_ARMEL' or 'sb-conf select SDK_X86'
+
+<br>
+<br>
+the last problem was the 'fakeroot apt-get install maemo-explicit'.
+this worked in the X86 environment, but failed due to errors like:
+
+<pre>
+Setting up libhildon-input-method-framework-sdk2 (2.2.8-2) ...
+Updating the IM modules list for GTK+-2.4.0.../usr/sbin/update-gtk-immodules: line 22: /usr/bin/gtk-query-immodules-2.0: cannot execute binary file
+....
+Setting up osso-addressbook (1.20070213) ...
+/var/lib/dpkg/info/osso-addressbook.postinst: line 1: /usr/bin/gconftool-2: cannot execute binary file
+</pre>
+<br>
+eventually I figured out to start scratchbox, and the install
+completed.
+<br>
+
+hope this helps someone else save some time ....
+
+<br>
+<br>
+rob at janerob dot com &nbsp &nbsp &nbsp 8 june 2007
+<br>
+</body>
+</html>

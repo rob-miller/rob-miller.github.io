@@ -1,0 +1,234 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Rob Miller">
+   <title>linux driver (patch) for the kensington expert mouse pro</title>
+</head>
+<body>
+
+<hr>
+<center><b><font size=+2>using the kensington expert mouse pro with linux </font></b></center>
+<center>rob miller -- rob at janerob dot com </center>
+<br>
+
+<b>update:</b> As of kernel 2.6.29, the boot protocol input drivers including 
+usbmouse.c are no longer easily available -- so the hack below won't work anymore. 
+This is actually probably a <it>good</it> thing, as it got me to revisit the state 
+of play for this device and work out the correct fix.
+<p>
+The Kensington Expert Mouse PRO USB trackball is now fully supported under linux 
+using the <it>usbhid</it> module.  'Fully supported' means that the mouse motion 
+works correctly and all the buttons and wheel generate mouse button events.  
+<p>
+This might not be exactly what you want, as the six function buttons along the top 
+seem best suited to launching applications, and at least KDE seems to only want to 
+create 'keyboard shortcuts' and not 'mouse button shortcuts'.  Another issue is that
+the four buttons around the trackball may not be generating the button signals 
+you want.  In my case, I prefer the upper left button to be the 'middle' button 
+(mouse button 2) - but this is mapped by default to the scroll wheel down press.
+<p>
+To solve these problems I recommend using <b>xmodmap</b> to re-map the mouse buttons,
+and a combination of <a href="http://hocwp.free.fr/xbindkeys/xbindkeys.html"><b>xbindkeys</b></a> and <b>xte</b> from the <a href="http://hoopajoo.net/projects/xautomation.html">xautomation</a> package.  All of these are in Gentoo's Portage, so hopefully
+they're in your distribution as well.
+<p>
+The details you should be able to work out from looking at the man pages for each of
+these programs, here's how I did it:
+<p>
+<b>/etc/X11/Xmodmap</b>:
+<pre>
+keycode 197 = F19
+keycode 198 = F20
+keycode 199 = F21
+keycode 200 = F22
+keycode 201 = F23
+keycode 202 = F24
+
+pointer = 1 8 3 4 5 7 9 2 6 10 11 12 13 14 15
+</pre>
+<p>
+<b>~/.xbindkeysrc</b>:
+<pre>
+"xte 'key F19'"
+b:10
+
+"xte 'key F20'"
+b:11
+
+"xte 'key F21'"
+b:12
+
+"xte 'key F22'"
+b:13
+
+"xte 'key F23'"
+b:14
+
+"xte 'key F24'"
+b:15
+</pre>
+<p>
+<b>~/.xinitrc</b>:
+<pre>
+#!/bin/bash
+
+xbindkeys
+xmodmap /etc/X11/Xmodmap
+</pre>
+<p>
+.xinitrc should run when you first log into X windows, but you may need something 
+differet for your distribution.
+<p>
+<a href="http://linux-trackball.dreamhosters.com/">This link</a> was very useful
+in working this all out, but uses a package called <a href="http://xmacro.sourceforge.net/"><b>xmacro</b></a> which doesn't appear to be as well maintained as <b>xautomation</b>.
+
+<p>
+19 May 2009
+<p>
+<hr>
+<hr>
+
+the kensington expert mouse pro is a usb trackball with four main
+buttons, six application launch buttons and a mouse wheel.
+unfortunately the standard linux in-kernel mouse drivers do not
+process the signals from all of these buttons (in particular the
+application buttons).  to improve this
+situation, here are some simple modifications to the usbmouse.c file
+from the kernel source tree (2.6.17 at the time of writing, but this
+particular file seems relatively stable).  
+<p>
+to just do it without any further ado:
+<ul>
+<li> download <a href="usbmouse.patch">usbmouse.patch</a>
+</li>
+<li> cd to <i>/usr/src/linux/drivers/usb/input</i> 
+</li>
+<li>
+execute '<i>patch &lt usbmouse.patch</i>'
+</li>
+<li>
+cd to <i>/usr/src/linux</i>
+</li>
+<li>
+<i>make modules; make modules_install</i>
+</li>
+<li>
+see the notes below about 'integrating with your desktop'
+</li>
+</ul>
+<p>
+you will probably find that the usbhid module still grabs the
+trackball first, and I leave it to you to sort this out for your
+system.  I find that the following procedure works on a live system:
+<ul>
+<li>switch to a text console</li>
+<li> <i>rmmod usbmouse; rmmod usbhid; modprobe usbmouse</i> </li>
+<li> unplug/re-plug the trackball (then the usb keyboard if you lost it)</li>
+<li> switch back to X</li>
+</ul>
+<p>
+the patch is simply:
+<p>
+<pre>
+--- usbmouse.c.orig	2006-09-22 14:22:57.000000000 +0000
++++ usbmouse.c	2007-02-08 09:29:44.000000000 +0000
+@@ -84,6 +84,17 @@
+ 	input_report_key(dev, BTN_SIDE,   data[0] & 0x08);
+ 	input_report_key(dev, BTN_EXTRA,  data[0] & 0x10);
+ 
++	// rtm 2.x.2006
++	//info ("mouse urb %0x %0x %0x %0x %0x %0x ",data[0],data[1],data[2],data[3],data[4],data[5]);
++	
++	// using F19-F24 as various extra button symbols apparently ignored by Xorg
++	input_report_key(dev, KEY_F19, data[4] & 0x01);
++	input_report_key(dev, KEY_F20, data[4] & 0x02);
++	input_report_key(dev, KEY_F21, data[4] & 0x04);
++	input_report_key(dev, KEY_F22, data[4] & 0x08);
++	input_report_key(dev, KEY_F23, data[4] & 0x10);
++	input_report_key(dev, KEY_F24, data[4] & 0x20);
++
+ 	input_report_rel(dev, REL_X,     data[1]);
+ 	input_report_rel(dev, REL_Y,     data[2]);
+ 	input_report_rel(dev, REL_WHEEL, data[3]);
+@@ -183,6 +194,15 @@
+ 	input_dev->keybit[LONG(BTN_MOUSE)] |= BIT(BTN_SIDE) | BIT(BTN_EXTRA);
+ 	input_dev->relbit[0] |= BIT(REL_WHEEL);
+ 
++	// rtm 2.x.2006
++	// using F19-F24 as various extra button symbols apparently ignored by Xorg
++        set_bit(KEY_F19,input_dev->keybit);
++        set_bit(KEY_F20,input_dev->keybit);
++        set_bit(KEY_F21,input_dev->keybit);
++        set_bit(KEY_F22,input_dev->keybit);
++        set_bit(KEY_F23,input_dev->keybit);
++        set_bit(KEY_F24,input_dev->keybit);
++
+ 	input_dev->private = mouse;
+ 	input_dev->open = usb_mouse_open;
+ 	input_dev->close = usb_mouse_close;
+</pre>
+<p>
+all it does is add code to send the key codes for fn keys 19-24 when the
+application buttons are pressed.  if you want to see exactly what
+codes are coming in from the mouse, uncomment the 'info' line and
+watch the output appear in /var/log/messages.
+
+<p>
+<b>integrating with your desktop:</b>
+<p>
+all this does is get the mouse button events that are arriving in usb
+packets to come out of the kernel as information from the mouse
+driver.  to get the mouse buttons ordered to your liking and
+recognized by your window manager you will still probably need to use
+xmodmap.   my .Xmodmap file contains:
+<p>
+<pre>
+keycode 132 = XF86Launch1
+keycode 170 = XF86Launch2
+keycode 219 = XF86Launch3
+keycode 249 = XF86Launch4
+keycode 205 = XF86Launch5
+keycode 207 = XF86Launch6
+keycode 174 = XF86AudioLowerVolume
+keycode 176 = XF86AudioRaiseVolume
+keycode 160 = XF86AudioMute
+
+pointer = 1 7 3 8 6 4 5 2 9 10 11 12
+</pre>
+<p>
+the keycodes can be determined by running xev and clicking buttons
+while the pointer is in the window.  xmodmap links these to the
+desired XF86 codes as shown, then the windowmanager can be configured
+to perform actions (e.g. launch applications) when the XF86 codes come
+through. 
+<p>
+for more information, see in particular the man pages for
+<b>xmodmap</b> and <b>xev</b>.
+
+<br>
+<p>
+24 february 2007
+<p>
+<br>
+
+<hr>
+<div id="adsense1">
+<center><p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-1801987312954275";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel ="";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</p></center>
+</div>
+
+
+
+</body>
+</html>

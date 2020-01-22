@@ -1,0 +1,2 @@
+echo "lcd_out:1" > /proc/acpi/toshiba/video
+echo "crt_out:0" > /proc/acpi/toshiba/video

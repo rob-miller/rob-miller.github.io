@@ -1,0 +1,84 @@
+> is it the memory/c(g)pu connections on the gfx board or really the main board?
+
+difficult to say with any degree of certainty. given that it was
+triggered both by heat and by pressing on the keyboard above the
+card, i'd say it was the ball grid array underneath one or more of the
+5 large chips. (cpu and 4x memory chip) as a crack or some other
+structural problem would not have been remedied by heating so it must
+have been the solder, and then i'd estimate that the other components on
+the card are too small to be affected by any flexing produced by
+pressing down on the keyboard.  it's certainly the a problem with the
+solder on the gfx board somewhere. (i've done nothing to the cables or
+the rest of the laptop at any rate... well, other than losing a handful
+of screws ;)
+
+> where did you read about trying this anyway?
+
+i found a thread on a notebook forum via google.
+
+http://www.notebookforums.com/showthread.php?s=b072c74b768ad79defd36d42726057e9&t=48948
+
+i posted a reply towards the end of it recently detailing roughly
+what i did to fix it. there seem to be some unscrupulous people
+who have cottoned on to this easy fix and are trying to relieve
+people of their broken satellites for pittance by claiming they
+are very hard to fix and require expensive rework stations and
+lots of experience. sigh.
+
+sadly i didn't have the foresight to take pictures of the various
+steps but i can explain what i did.
+
+i removed the card, removed the copper shield, removed the 2
+small black foam supports and placed it on a heat proof surface.
+
+i made some small supports out of rolled up tin foil to support
+the card. (i didn't want the components currently on the bottom
+to move around if the heat passed through the board and melted the
+solder underneath) it's probably not necessary and you can improvise
+here. just try to ensure that the card isn't resting on a potentially
+mobile component.
+
+i switched on the gun on high heat and held it 12 inches above the
+card and slowly (over 40 seconds to a minute) lowered the gun closer
+to the card until it was about an inch away from one of the chips.
+
+(i was holding the gun so all measurements are approximate)
+
+you should be able to see other components nearby melt as when the
+solder becomes fluid, if also becomes shinier / smoother)
+
+i recall reading that i should continue to heat for another 30 seconds
+or so then stop. this is firstly because BGA is shielded from direct
+heat by the silicone (it's underneath the chip and in fact you can't see
+whether you've actually melted it or not at any point during the
+proceedure) and so need to be heated longer and secondly because the
+that gun can heat to around 500 degrees C and this is close to the max
+heat tolerance of the silcone (or so i'd read, i doubt that this is the
+case now).
+i tried that for all the chips on one side. then let it cool naturally
+for 10-15 minutes, turned it over and did the same to the other side.
+it didn't work. i tried again.  it still didn't work.
+on the final attempt i dispensed with nervously
+heating the chips for fixed periods of time and really gave the
+whole board a good going over to the extent that the serial number
+curled up and melted and the plastic washers underneath the
+black foam circles burnt away to nothing. and it all worked
+fine and does to this day. i suspect that the silicone is
+not as susceptible to heat damage as i'd thought and the same
+probably goes for the other components. however, i could
+have just been lucky. so you attempt this procedure at your
+own risk. (i have no qualifications pertaining to electronics
+repair whatsoever but i'm instinctively good at it and think nothing
+at all of dismantling expensive equipment ;)
+
+it's unfortunate that i can't give you any precise heating times
+but i'd lost all patience after assembling and disassembling that
+damn laptop time and time again and wasn't paying much attention
+to the time.
+
+if you have any more questions then please ask.
+
+cheers,
+pete.
+
+

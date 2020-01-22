@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title>proof sheet (contact sheet) perl code -- Sony DSC-F717 DSC-S70 Minolta Xg</title>
+</head>
+
+<body>
+<center>
+<h1>Proof Sheet / Contact Sheet / Index for Digital Photos</h1>
+<h2>designed for Sony DSC-S70, DSC-F717 and Minolta Xg cameras, probably works for others </h2>
+<a href="proofsample/index.html">click here for a sample proof sheet</a>
+</center>
+<b>Update:</b> My wife recently got a Minolta Xg, a lovely small
+camera that goes a lot more places than my F717.  I've tweeked these
+scripts to work with the QuickTime(tm) MOV files that it generates for
+video clips, and also switched to using mplayer to pull out the first
+frame.
+<p>
+
+I store all my digital photos in directories named by the date I copied them
+from the camera, and I now find I need something like the 'proof sheets' I made
+when I did 35mm B&W photography.
+<p>
+Originally I only intended to print these out and store them with the CDs, however I've added enough to the html pages that it is useful to keep them as indexes with each directory.
+<p>
+The EXIF data embedded in each JPEG from the camera contains not only timestamp and exposure information for each image, but also a 'thumbnail' version of the photograph.  These are much faster to extract and display than resizing each image with e.g. ImageMagick, so that's part of what this code does.
+<p>
+The code relies on having the directory structure as these two cameras create it on the memory stick.  Specifically, that's something like:
+<p>
+<pre>
+/dcim
+  /101msdcf  (or more directories if created for the F717)
+     /*.jpg
+</pre>
+
+The S70 also has an <b>mssony</b> directory at the same level as <b>dcim</b> for MPEGs, this code handles that too.
+It will also handle multiple image folders as the F717 can create.
+<p>
+This software is written to run under <b>Linux</b>.  You can probably make it work under Windows using Active Perl and Windows versions of the required software, but I haven't done that.
+<p>
+<b>Additional Required Software:</b>
+<br>
+   ImageMagick (convert)     <a href="http://www.imagemagick.org/">http://www.imagemagick.org/</a>
+<br>
+   jhead                     <a href="http://www.sentex.net/~mwandel/jhead/">http://www.sentex.net/~mwandel/jhead/</a> <a href="jhead-2.0.tar.gz">[local copy]</a>
+<br>
+   mpeg2decode               <a href="http://www.mpeg.org/MSSG/">http://www.mpeg.org/MSSG/</a> <a href="mpeg2vidcodec_v12.tar.gz">[local copy]</a>
+<br>
+   Image::Info CPAN module   <a
+   href="http://www.cpan.org/modules/index.html">http://www.cpan.org/modules/index.html</a> <a href="image-info.tar.gz">[local copy]</a>
+<br>
+   mplayer                   <a
+   href="http://www.mplayerhq.hu/">http://www.mplayerhq.hu/</a>
+<br>
+   transcode                 <a
+   href="http://zebra.fh-weingarten.de/~transcode/">http://zebra.fh-weingarten.de/~transcode/</a> (only needed for converting the Xg's QuickTime(tm) MOV files)
+<p>
+
+<b>What it does:</b>
+<br>
+<a href="proof.pl">proof.pl</a> is a perl script to produce an html page with thumbnail images of the digital photos in a
+directory directly copied from a Sony camera as described above.  A thumbnail image for the first frame
+of each MPEG file is also produced, and information for each file is presented below the thumbnail image.
+For JPEGs this information is the file name, exposure date and resolution; for MPEGs the file name,
+duration and resolution are displayed.  Clicking on a thumbnail will load the .jpg or .mpg file directly
+to your browser.  This page can be printed out to store with your CDs or other media, and I also keep
+the webpage and thumbnails with the directory as an index for future use.
+<p>
+<a href="proof-all.pl">proof-all.pl</a> calls <i>proof.pl</i> for each subdirectory in the current (or specified) directory and generates
+a top-level index.html file with links to the proof sheet (.html file) in each subdirectory and a count
+of JPEGs and MPEGs contained there.
+<p>
+Here is a <a href="proofsample/index.html">sample</a> produced by <i>proof-all.pl</i> with only a single
+subdirectory.  Note that the full size images are not included, as I have only a dial-up connection to
+my web host.
+<p>
+<b>Installation:</b>
+Get the software listed above, install it in /usr/local/bin.  If you put them
+anywhere else, edit my perl scripts to reflect the correct paths (where it says
+"change these...").
+<p>
+<b>Use:</b>
+I just <font face="Courier New,Courier">cd</font> to a directory containing subdirectories as copied over from a
+MemoryStick(tm) and run <font face="Courier New,Courier">proof-all.pl</font>.  
+This will produce an <font face="Courier New,Courier">index.html</font> file; 
+point your web browser at it.
+
+<hr>
+rob miller -- <b>rob</b> at <b>janerob</b> dot <b>com</b><br>
+This page has been accessed 
+<!--#exec cgi="/cgi-bin/rcount.cgi" --> 
+times since 09 August 2003. 
+
+<address></address>
+<!-- hhmts start --> Last modified: Mon Sep 22 00:32:43 WAT 2003 <!-- hhmts end -->
+</body> </html>

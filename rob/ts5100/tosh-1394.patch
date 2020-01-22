@@ -1,0 +1,65 @@
+--- linux-2.6.11-rc3-orig/drivers/ieee1394/ohci1394.c	2005-02-08 21:37:41.000000000 +0100
++++ linux/drivers/ieee1394/ohci1394.c	2005-02-09 14:56:29.000000000 +0100
+@@ -3180,6 +3180,23 @@
+ 	return err;				\
+ } while (0)
+ 
++
++/* Some Toshiba laptops need extra code to enable their TI TSB43AB22/A for the probe */
++
++#if defined(__i386__)
++#include <linux/dmi.h>
++static struct dmi_system_id extra_init_dmi_table[] = {
++       {
++               .ident = "Toshiba Satellite 5100-501",
++               .matches = {
++                       DMI_MATCH(DMI_SYS_VENDOR, "TOSHIBA"),
++                       DMI_MATCH(DMI_PRODUCT_NAME , "S5100-"),
++	       },
++       },
++       { }
++};
++#endif
++
+ static int __devinit ohci1394_pci_probe(struct pci_dev *dev,
+ 					const struct pci_device_id *ent)
+ {
+@@ -3188,12 +3205,38 @@
+ 	struct hpsb_host *host;
+ 	struct ti_ohci *ohci;	/* shortcut to currently handled device */
+ 	unsigned long ohci_base;
++	
++#if defined(__i386__)
++	u16  toshiba_pcls;
++	int toshiba=0;
++
++	//if (dmi_check_system(extra_init_dmi_table)) {
++	if (1) {
++	        PRINT_G(KERN_INFO, "Toshiba %s detected, enabling extra initialization code",
++			dmi_get_system_info(DMI_PRODUCT_NAME));
++		toshiba=1;
++
++	        dev->current_state = 4;
++		pci_read_config_word(dev,PCI_CACHE_LINE_SIZE,&toshiba_pcls);
++	}
++#endif
+ 
+ 	if (version_printed++ == 0)
+ 		PRINT_G(KERN_INFO, "%s", version);
+ 
+         if (pci_enable_device(dev))
+ 		FAIL(-ENXIO, "Failed to enable OHCI hardware");
++
++#if defined(__i386__)
++	if (toshiba) {
++	        mdelay(10);
++	        pci_write_config_word(dev,PCI_CACHE_LINE_SIZE,toshiba_pcls);
++	        pci_write_config_word(dev,PCI_INTERRUPT_LINE,dev->irq);
++	        pci_write_config_dword(dev,PCI_BASE_ADDRESS_0,pci_resource_start(dev, 0));
++	        pci_write_config_dword(dev,PCI_BASE_ADDRESS_1,pci_resource_start(dev, 1));
++	}
++#endif
++
+         pci_set_master(dev);
+ 
+ 	host = hpsb_alloc_host(&ohci1394_driver, sizeof(struct ti_ohci), &dev->dev);

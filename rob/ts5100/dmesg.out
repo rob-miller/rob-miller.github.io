@@ -1,0 +1,210 @@
+Linux version 2.4.18 (root@vista) (gcc version 2.95.4 20011002 (Debian prerelease)) #18 Thu Jul 25 07:20:42 BST 2002
+BIOS-provided physical RAM map:
+ BIOS-e820: 0000000000000000 - 000000000009fc00 (usable)
+ BIOS-e820: 000000000009fc00 - 00000000000a0000 (reserved)
+ BIOS-e820: 00000000000e0000 - 00000000000eee00 (reserved)
+ BIOS-e820: 00000000000eee00 - 00000000000ef000 (ACPI NVS)
+ BIOS-e820: 00000000000ef000 - 0000000000100000 (reserved)
+ BIOS-e820: 0000000000100000 - 000000001ffd0000 (usable)
+ BIOS-e820: 000000001ffd0000 - 000000001ffe0000 (ACPI data)
+ BIOS-e820: 000000001ffe0000 - 0000000020000000 (reserved)
+ BIOS-e820: 00000000feda0000 - 00000000fedc0000 (reserved)
+ BIOS-e820: 00000000ffb80000 - 00000000ffc00000 (reserved)
+ BIOS-e820: 00000000fff80000 - 0000000100000000 (reserved)
+On node 0 totalpages: 131024
+zone(0): 4096 pages.
+zone(1): 126928 pages.
+zone(2): 0 pages.
+ACPI: RSDP (v000 TOSHIB                     ) @ 0x000f0180
+ACPI: RSDT (v001 TOSHIB 5100     08194.00544) @ 0x1ffd0000
+ACPI: FADT (v002 TOSHIB 5100     08194.00544) @ 0x1ffd0058
+ACPI: DBGP (v001 TOSHIB 5100     08194.00544) @ 0x1ffd00dc
+ACPI: BOOT (v001 TOSHIB 5100     08194.00544) @ 0x1ffd0030
+ACPI: MADT not present
+No local APIC present or hardware disabled
+Kernel command line: BOOT_IMAGE=Linux_2.4 ro root=302 idebus=66 ide0=dma hdc=ide-scsi
+ide_setup: idebus=66
+ide_setup: ide0=dma
+ide_setup: hdc=ide-scsi
+Initializing CPU#0
+Detected 1694.548 MHz processor.
+Console: colour dummy device 80x25
+Calibrating delay loop... 3381.65 BogoMIPS
+Memory: 513164k/524096k available (1373k kernel code, 10544k reserved, 452k data, 232k init, 0k highmem)
+Dentry-cache hash table entries: 65536 (order: 7, 524288 bytes)
+Inode-cache hash table entries: 32768 (order: 6, 262144 bytes)
+Mount-cache hash table entries: 8192 (order: 4, 65536 bytes)
+Buffer-cache hash table entries: 32768 (order: 5, 131072 bytes)
+Page-cache hash table entries: 131072 (order: 7, 524288 bytes)
+CPU: Before vendor init, caps: 3febf9ff 00000000 00000000, vendor = 0
+CPU: L1 I cache: 12K, L1 D cache: 8K
+CPU: L2 cache: 512K
+CPU: After vendor init, caps: 3febf9ff 00000000 00000000 00000000
+Intel machine check architecture supported.
+Intel machine check reporting enabled on CPU#0.
+CPU:     After generic, caps: 3febf9ff 00000000 00000000 00000000
+CPU:             Common caps: 3febf9ff 00000000 00000000 00000000
+CPU: Intel(R) Pentium(R) 4 Mobile CPU 1.70GHz stepping 04
+Enabling fast FPU save and restore... done.
+Enabling unmasked SIMD FPU exception support... done.
+Checking 'hlt' instruction... OK.
+POSIX conformance testing by UNIFIX
+mtrr: v1.40 (20010327) Richard Gooch (rgooch@atnf.csiro.au)
+mtrr: detected mtrr type: Intel
+ACPI: Subsystem revision 20020702
+PCI: PCI BIOS revision 2.10 entry at 0xfcd8a, last bus=5
+PCI: Using configuration type 1
+ tbxface-0099 [03] Acpi_load_tables      : ACPI Tables successfully loaded
+Parsing Methods:..........................................................................................................................................
+Table [DSDT] - 694 Objects with 62 Devices 138 Methods 15 Regions
+ACPI Namespace successfully loaded at root c031d61c
+evxfevnt-0076 [04] Acpi_enable           : Transition to ACPI mode successful
+Executing all Device _STA and_INI methods:..............................................................
+62 Devices found containing: 62 _STA, 1 _INI methods
+Completing Region/Field/Buffer/Package initialization:......................................................
+Initialized 11/15 Regions 0/0 Fields 18/18 Buffers 25/25 Packages (694 nodes)
+ACPI: Interpreter enabled
+ACPI: Using PIC for interrupt routing
+ACPI: System [ACPI] (supports S0 S3 S4 S5)
+ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 6 7 10 *11 12)
+ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 6 7 10 11 12, disabled)
+ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 *6 7 10 11 12)
+ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 6 *7 10 11 12)
+ACPI: PCI Interrupt Link [LNKE] (IRQs 3 *4 6 7 10 11 12)
+ACPI: PCI Interrupt Link [LNKF] (IRQs 3 4 6 7 10 11 12, disabled)
+ACPI: PCI Interrupt Link [LNKG] (IRQs *5)
+ACPI: PCI Interrupt Link [LNKH] (IRQs 3 4 6 7 10 11 12, disabled)
+ACPI: PCI Root Bridge [PCI0] (00:00)
+PCI: Probing PCI hardware (bus 00)
+Unknown bridge resource 0: assuming transparent
+Unknown bridge resource 2: assuming transparent
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCIB._PRT]
+pci_bind-0194 [67] acpi_pci_bind         : Device 00:02:0a.00 not present in PCI namespace
+pci_bind-0194 [67] acpi_pci_bind         : Device 00:02:0a.01 not present in PCI namespace
+ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI1._PRT]
+ACPI: Power Resource [PFN0] (off)
+ACPI: Power Resource [PFN1] (off)
+ACPI: PCI Interrupt Link [LNKB] enabled at IRQ 10
+ACPI: PCI Interrupt Link [LNKF] enabled at IRQ 11
+ACPI: PCI Interrupt Link [LNKH] enabled at IRQ 10
+Linux NET4.0 for Linux 2.4
+Based upon Swansea University Computer Society NET3.039
+Initializing RT netlink socket
+Starting kswapd
+Journalled Block Device driver loaded
+ACPI: AC Adapter [ADP1] (on-line)
+ACPI: Battery Slot [BAT1] (battery present)
+ACPI: Power Button (FF) [PWRF]
+ACPI: Lid Switch [LID]
+ACPI: Fan [FAN0] (off)
+ACPI: Fan [FAN1] (off)
+ACPI: Processor [CPU0] (supports C1 C2 C3, 2 performance states)
+ACPI: Thermal Zone [THRM] (30 C)
+vesafb: framebuffer at 0xd8000000, mapped to 0xe0808000, size 32768k
+vesafb: mode is 1280x1024x16, linelength=2560, pages=1
+vesafb: protected mode interface info at c000:e8c0
+vesafb: scrolling: redraw
+vesafb: directcolor: size=0:5:6:5, shift=0:11:5:0
+Console: switching to colour frame buffer device 160x64
+fb0: VESA VGA frame buffer device
+pty: 256 Unix98 ptys configured
+Serial driver version 5.05c (2001-07-08) with MANY_PORTS SHARE_IRQ SERIAL_PCI enabled
+PCI: Enabling device 00:1f.6 (0000 -> 0001)
+block: 128 slots per queue, batch=32
+Uniform Multi-Platform E-IDE driver Revision: 6.31
+ide: Assuming 66MHz system bus speed for PIO modes
+PIIX4: IDE controller on PCI bus 00 dev f9
+PIIX4: chipset revision 2
+PIIX4: not 100% native mode: will probe irqs later
+    ide0: BM-DMA at 0xcfa0-0xcfa7, BIOS settings: hda:DMA, hdb:pio
+    ide1: BM-DMA at 0xcfa8-0xcfaf, BIOS settings: hdc:DMA, hdd:pio
+hda: TOSHIBA MK4019GAX, ATA DISK drive
+hdc: TOSHIBA DVD-ROM SD-R2102, ATAPI CD/DVD-ROM drive
+ide0 at 0x1f0-0x1f7,0x3f6 on irq 14
+ide1 at 0x170-0x177,0x376 on irq 15
+hda: 78140160 sectors (40008 MB), CHS=4864/255/63, UDMA(100)
+Partition check:
+ hda: hda1 hda2 hda3
+floppy0: no floppy controllers found
+Linux agpgart interface v0.99 (c) Jeff Hartmann
+agpgart: Maximum main memory to use for agp memory: 439M
+agpgart: Detected Intel i845 chipset
+agpgart: AGP aperture is 256M @ 0xe0000000
+[drm] Initialized tdfx 1.0.0 20010216 on minor 0
+SCSI subsystem driver Revision: 1.00
+request_module[scsi_hostadapter]: Root fs not mounted
+usb.c: registered new driver hub
+uhci.c: USB Universal Host Controller Interface driver v1.1
+PCI: Setting latency timer of device 00:1d.0 to 64
+uhci.c: USB UHCI at I/O 0xefe0, IRQ 11
+usb.c: new USB bus registered, assigned bus number 1
+hub.c: USB hub found
+hub.c: 2 ports detected
+PCI: Setting latency timer of device 00:1d.1 to 64
+uhci.c: USB UHCI at I/O 0xef80, IRQ 7
+usb.c: new USB bus registered, assigned bus number 2
+hub.c: USB hub found
+hub.c: 2 ports detected
+PCI: Enabling device 00:1d.2 (0000 -> 0001)
+PCI: Setting latency timer of device 00:1d.2 to 64
+uhci.c: USB UHCI at I/O 0x1000, IRQ 6
+usb.c: new USB bus registered, assigned bus number 3
+hub.c: USB hub found
+hub.c: 2 ports detected
+usb.c: registered new driver hiddev
+usb.c: registered new driver hid
+hid-core.c: v1.8 Andreas Gal, Vojtech Pavlik <vojtech@suse.cz>
+hid-core.c: USB HID support drivers
+Initializing USB Mass Storage driver...
+usb.c: registered new driver usb-storage
+USB Mass Storage support registered.
+mice: PS/2 mouse device common for all mice
+NET4: Linux TCP/IP 1.0 for NET4.0
+IP Protocols: ICMP, UDP, TCP, IGMP
+IP: routing cache hash table of 4096 buckets, 32Kbytes
+TCP: Hash tables configured (established 32768 bind 32768)
+NET4: Unix domain sockets 1.0/SMP for Linux NET4.0.
+hub.c: USB new device connect on bus2/2, assigned device number 2
+input0: USB HID v1.00 Mouse [Synaptics Inc. Synaptics Inc.] on usb2:2.0
+kjournald starting.  Commit interval 5 seconds
+EXT3-fs: mounted filesystem with ordered data mode.
+VFS: Mounted root (ext3 filesystem) readonly.
+Freeing unused kernel memory: 232k freed
+Adding Swap: 714884k swap-space (priority -1)
+EXT3 FS 2.4-0.9.17, 10 Jan 2002 on ide0(3,2), internal journal
+Real Time Clock Driver v1.10e
+scsi0 : SCSI host adapter emulation for IDE ATAPI devices
+  Vendor: TOSHIBA   Model: DVD-ROM SD-R2102  Rev: 1317
+  Type:   CD-ROM                             ANSI SCSI revision: 02
+Intel(R) PRO/100 Fast Ethernet Adapter - Loadable driver, ver 1.8.38
+Copyright (c) 2002 Intel Corporation
+
+eth0: Intel(R) PRO/100 VE Network Connection
+  Mem:0xfceff000  IRQ:4  Speed:0 Mbps  Dx:N/A
+  Failed to detect cable link.
+  Speed and duplex will be determined at time of connection.
+  Hardware receive checksums enabled
+Toshiba Laptop ACPI Extras version 0.12
+ttyS0: LSR safety check engaged!
+ttyS0: LSR safety check engaged!
+PCI: Enabling device 00:1f.5 (0000 -> 0001)
+PCI: Setting latency timer of device 00:1f.5 to 64
+intel8x0: clocking to 48000
+svc: unknown version (3)
+Linux PCMCIA Card Services 3.1.34
+  kernel build: 2.4.18 #18 Thu Jul 25 07:20:42 BST 2002
+  options:  [pci] [cardbus] [apm]
+Intel ISA/PCI/CardBus PCIC probe:
+PCI: Enabling device 02:0b.0 (0000 -> 0002)
+PCI: Enabling device 02:0b.1 (0000 -> 0002)
+  Toshiba ToPIC100 rev 32 PCI-to-CardBus at slot 02:0b, mem 0xfce01000
+    host opts [0]: [slot 0xd0] [ccr 0x11] [cdr 0x86] [rcr 0xc000000] [pci irq 11] [lat 64/176] [bus 4/4]
+    host opts [1]: [slot 0xd0] [ccr 0x21] [cdr 0x86] [rcr 0xc000000] [pci irq 10] [lat 64/176] [bus 5/5]
+    ISA irqs (default) = 3,12 PCI status changes
+nvidia: loading NVIDIA NVdriver Kernel Module  1.0-2880  Tue Mar 26 08:12:38 PST 2002
+NVRM: AGPGART: unknown chipset
+NVRM: AGPGART: aperture: 256M @ 0xe0000000
+NVRM: AGPGART: aperture mapped from 0xe0000000 to 0xe3a59000
+NVRM: AGPGART: mode 4x
+NVRM: AGPGART: allocated 16 pages

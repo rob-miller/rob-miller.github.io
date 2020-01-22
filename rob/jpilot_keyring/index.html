@@ -1,0 +1,84 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Rob Miller">
+   <title>jpilot plugin to import passwords to pilot from zaurus keyring</title>
+</head>
+<body>
+
+<hr>
+<center><b><font size=+2>import zaurus keyring to palmos keyring </font></b></center>
+<center>rob miller -- rob at janerob dot com </center>
+<br>
+despite the amazing coolness of having unix(tm) - linux - in the palm
+ouf your hand, I've pretty much given up using my zaurus.  its heavy,
+big, and the superior open source roms still aren't that stable or
+well supported.  I bought a palm z22 (zire) off ebay with a palm soft
+rubber case and find it very satisfactory.
+<p>
+two points on reviews I found of the z22 before I bought:
+<ul>
+<li>
+some reviews describe the z22/zire as an appropriate pda for someone just
+starting out, new to pdas.  I've programmed the casio zoomer, sharp pc-1600,
+various palm iii versions and the zaurus; I bought and use the z22
+because it is simple and just does what I need a pda for (and it still
+runs OnboardC)
+</li>
+<li>
+some reviews complain that the z22/zire case feels cheap and
+'plasticky'; maybe so, but with the palm rubber glove-like case that
+came with mine it feels and is as robust as I need (and I'm pretty
+hard on things).
+</li>
+</ul>
+
+<p>
+having made the decision to switch back to palm, the remaining issue
+was getting the personal data converted over.  the addresses weren't
+too bad, though can't remember how I did it, but for the password
+keyring (one of my biggest uses for a pda) I had to write some code.
+<a href="http://www.scrypt.net/~celer/kweb/">keyring</a> for the
+zaurus held all my data and can export everything to a plain text xml
+file, while <a href="http://gnukeyring.sourceforge.net/">keyring</a>
+for palm os was where I wanted to get it to.  <a
+href="http://www.jpilot.org/index.html">jpilot</a> provides an open
+source conduit for palm os keyring, so that's where I started.  
+
+<p>
+here is my modified <a href="keyring.c">keyring.c</a> file. swap it
+for jpilot's keyring.c to get a keyring import conduit that can read
+your zaurus keyring xml file.  you will no doubt find that all the
+fields do not match up perfectly, but it goes a lot faster than doing
+it entirely by hand.
+<p>
+I hope you find this useful.
+<p>
+24 february 2007
+
+
+<br>
+<br>
+
+<hr>
+<div id="adsense1">
+<center><p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-1801987312954275";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel ="";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</p></center>
+</div>
+
+
+
+</body>
+</html>

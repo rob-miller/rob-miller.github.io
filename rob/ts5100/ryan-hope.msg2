@@ -1,0 +1,18 @@
+Hey Rob,
+   First off, I hate modules. So, I copied cpad.c cpad.h, etc... into 
+the drivers/usb/input and modified the Makefile and Kconfig so that the 
+cpad driver could be compiled into the kernel, the patch does not 
+include the cpad quirk though.
+
+Second, I took all of the available patches for the toshiba and put them 
+into one patch. The toshiba fixes patch inclueds, the experimental 
+toshiba_acpi patch plus the bluetooth modifications, the smbus fix, and 
+the firewire fix (which fixed all of the error messages which I used to 
+get, i havent tried it on a real device yet, but at least firewire looks 
+like it is behaving properly.)
+
+Last, for anyone that has an internal orinoco wireless card, I made a 
+patch to update the inkernel version to to the latest version so 
+scanning works.
+
+-Ryan

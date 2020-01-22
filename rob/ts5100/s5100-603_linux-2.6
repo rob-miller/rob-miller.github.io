@@ -1,0 +1,91 @@
+I have the S5100-603 which is exactely the same than yours except for having a 
+1.9 Ghz cpu and a 60 GB harddisk.
+
+Well, so far I tested 2.6.0-test9 to 2.6.1
+(I use Gentoo linux-2.6.1-rc2-gentoo)
+
+But I have several problems.
+
+No problems compiling the kernel. Just take care not to use the floppy!
+Framebuffer, ide (use boot param idebus=66 to speed it up a bit), ethernet, 
+usb, cf, vmware, and Nvidia works perfect.
+acpi works, and the toshiba-acpi too.
+
+A very nice feature is the cpu clocking feature
+/sys/devices/system/cpu/cpu0/cpufreq/
+a brief description can be found in 
+/usr/src/linux-2.6.1-rc2-gentoo/Documentation/cpu-freq/user-guide.txt
+U can set the frequency to any of the following frequences:
+237500 475000 712500 950000 1187500 1425000 1662500 1900000 Hz
+This saves a lot of battery power
+
+
+But
+Suspend:
+software suspend:  chrashes while suspending or simply does not wake up 
+suspend to disk: sometimes works sometimes not.. Without X it seems to be more 
+stable, but not reliable.
+Suspend to ram does nothing at all
+
+Firewire:
+I use a external harddisk for backup and hd space extension which has USB and 
+Firewire.
+Unfortunately the Toshiba has only USB 1.1 which is far too slow.
+So I wanted to use IEEE1394.
+But after (sucessfull) loading ohci1394 the system runs into troubles, even if 
+you don't use it. 
+I get the same errors as described here:
+http://sourceforge.net/tracker/index.php?func=detail&aid=716867&group_id=2252&atid=202252
+
+Sound:
+The deprecated OSS drivers work fine but Alsa makes troubles
+I simply get distorting sound with clicks and speed problems. Depending on the 
+system load it sounds like a old tape recorder with speed problems.
+The kernel reports 
+ALSA sound/core/pcm_lib.c:224: Unexpected hw_pointer value [2] (stream = 0, 
+delta: -1566, max jitter = 8192): wrong interrupt acknowledge?
+about once a minute. The delta differs between -62 and -2046
+
+It seems to be a interrupt problem, but I have no idea how to change the 
+interrupt of the soundcard
+
+
+Bluetooth:
+The hci_uart loads but it seems that it does not work.
+In the moment I don't have any Bluetooth devices so I can't test
+
+IRDA:
+Not tested so far
+
+Modem:
+not tested so far
+
+Cpad:
+I use a USB-mouse.
+So I did not test it so far. 
+But with 2.4.x I was using the LCD for monitoring the net load, the system 
+load and the battery power.
+And of course I want to use that feature with 2.6 too.
+But I did not have time so far.
+
+WiFI:
+I have the original internal Thosiba pccard.
+Works fine with orinoco hermes and orinoco_cs
+cardmgr loads the automatically
+But I just played arround a bit with it, so I don't know how stable it is
+
+SD & SM
+No way to get it working so far, but I also did not try very hard
+
+Some more comments:
+There is a new Bios available, v 1.20 but for Linux I can not see any 
+differences
+Oh, and one more thing:
+If u want to reset the bios to the defaults, power on the system, immediately 
+press ESC and then F1
+
+
+cheers
+michael
+
+Michael Erhard

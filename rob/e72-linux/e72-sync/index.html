@@ -1,0 +1,227 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Rob Miller">
+   <title>Sync Nokia E72 with Linux tools</title>
+</head>
+<body>
+<hr>
+   <center><h1>Sync Nokia E72 with Linux tools</h1></center>
+<center><h3>also other Nokia S60 fp 3 phones with osynctool / opensync / syncml-obex-client</h3></center>
+<hr>
+<center><b><font size=+2>it's a start </font></b></center>
+<center>rob miller -- rob at janerob dot com </center>
+
+<div id="adsense1">
+<center><p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-1801987312954275";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel ="";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</p></center>
+</div>
+<p>
+<hr>
+<b>update 16 nov 2010</b>
+<p>
+<ul>
+<li>I've been using a perl script I wrote several months back to sync the e72 calendar to KDE's calendar in Kontact/Korganizer.  Grab the script here: <a href="ksml">ksml</a>
+<ul>
+<li> it depends on syncml-ds-tool, referenced below
+<li> amongst other things, it 'hides' (deletes from the phone) todo entries with a future start date (preference setting at beginning of ksml if you don't like this)
+<li> you need to create a work dir somewhere for syncml-ds-tool to store the phone's data
+<li> you need to <b>edit the script</b> to set your bluetooth mac address, location of your work dir and the location of your korganizer std.ics file - <b>back this up first</b>
+<li> <b>there are still some bugs</b> but it works for me...
+<li> sometimes I need to use 'sdptool browse &lt bt mac address&gt' to wake the phone up for the bluetooth sync
+</ul>
+<p>
+<li> I recently wiped my phone to upgrade its software; I learned:
+<ul>
+<li> ksml restored the calendar without trouble
+<li> restoring the contacts and notes from syncml-ds-tool copies I'd been keeping required:
+<ul>
+<li> move the <b>entries</b> (not the syncml-ds-tool control files) out of the syncml-ds-tool work dirs
+<li> sync the phone
+<li> move the entries back
+<li> sync the phone again
+</ul>
+</ul>
+</ul>
+<hr>
+<p>
+If you're looking for a complete, turnkey solution -- this isn't it, yet.  So far I've had varying results getting the calendar, contacts, todo and notes data off the phone via bluetooth.  Putting data back to the phone is yet another story.  
+<p>
+<b>Back it all up first using Nokia PC Suite or similar.  You have been warned.</b>
+<p>
+This page is to quickly document the things I have working.  I'm using gentoo linux.  Also note that while playing with the Nokia PC Suite software on the dark side it seemed to update a few things on the phone.
+<p>
+
+<ul>
+
+<li>
+<b>sdptool</b>
+<p>
+The place to start.  Use 'sdptool browse' to get your phone info.  Most important is your bluetooth MAC address - 12 hex digits in the format XX:XX:XX:XX:XX:XX - but you know this already from the other pages you found before.
+</li>
+
+<li>
+<b>obexfs</b>
+<p>
+From the sdptool output above, find:
+
+<pre>
+Service Name: OBEX File Transfer
+Service RecHandle: 0x10008
+Service Class ID List:
+  "OBEX File Transfer" (0x1106)
+Protocol Descriptor List:
+  "L2CAP" (0x0100)
+  "RFCOMM" (0x0003)
+    Channel: 6
+  "OBEX" (0x0008)
+Language Base Attr List:
+  code_ISO639: 0x454e
+  encoding:    0x6a
+  base_offset: 0x100
+Profile Descriptor List:
+  "OBEX File Transfer" (0x1106)
+    Version: 0x0100
+</pre>
+From this you can work out to do 
+<pre>
+obexfs -b XX:XX:XX:XX:XX:XX -B 6 /mnt/obex
+</pre>
+
+You'll need the fuse kernel module installed and maybe tweek the permissions on the /mnt/obex mountpoint unless you want to do it only as root.  This will get you access to photos, downloads and music files, but not the directories that hold the PIM data.  This doesn't actually get you much more than plugging the phone in by the USB cable, but at least using this you could build a wireless sync for music and images.
+</li>
+<li>
+<b>syncml-ds-tool</b>
+<p>
+These things work for me:
+<p>
+<b>usb</b>
+<pre>
+$ syncml-ds-tool -u
+Superuser privileges are required to access complete USB information.
+Found 3 USB OBEX interfaces
+Interface 0:
+        Manufacturer: Nokia
+        Product: E72-1
+        Interface description: SYNCML-SYNC
+Interface 1:
+        Manufacturer: Nokia
+        Product: E72-1
+        Interface description: PC Suite Services
+Interface 2:
+        Manufacturer: Nokia
+        Product: E72-1
+        Interface description: SYNCML-DM
+Use '-u interface_number' to connect
+
+$ syncml-ds-tool -u 0 --slow-sync text/x-vcard Contacts --wbxml --identifier "PC Suite"
+$ syncml-ds-tool -u 0 --slow-sync text/x-vcalendar Calendar --wbxml --identifier "PC Suite"
+</pre>
+<b>bluetooth</b>
+<pre>
+$ syncml-ds-tool -b XX:XX:XX:XX:XX:XX 4 --slow-sync text/x-vcalendar /home/&lt my-user&gt/sdt/calendar Calendar --wbxml --identifier "PC Suite"
+$ syncml-ds-tool -b XX:XX:XX:XX:XX:XX 4 --slow-sync text/x-vcard /home/&lt my-user&gt/sdt/contacts Contacts --wbxml --identifier "PC Suite"
+$ syncml-ds-tool -b XX:XX:XX:XX:XX:XX 4 --slow-sync text/plain Notes /home/&lt my-user&gt/sdt/notes  --wbxml --identifier "PC Suite"
+</pre>
+Note that 'channel 4' for the bluetooth versionsof the command (-b option) comes from the sdptool info:
+<pre>
+Service Name: SyncMLClient
+Service RecHandle: 0x10006
+Service Class ID List:
+  UUID 128: 00000002-0000-1000-8000-0002ee000002
+Protocol Descriptor List:
+  "L2CAP" (0x0100)
+  "RFCOMM" (0x0003)
+    Channel: 4
+  "OBEX" (0x0008)
+Language Base Attr List:
+  code_ISO639: 0x454e
+  encoding:    0x6a
+  base_offset: 0x100
+Profile Descriptor List:
+  "" (0x00000002-0000-1000-8000-0002ee000002)
+    Version: 0x0100
+</pre>
+syncml-ds-tool dumpinfo looks like:
+<pre>
+========================================
+Man: NOKIA
+Mod: E72-1
+FirmwareVersion:
+SoftwareVersion: 021.024
+HardwareVersion:
+
+MaxMsgSize: 65535
+MaxObjSize: 3000000
+Transport used: OBEX client
+OMA DS mode used: server
+Identifier (Source): PC Suite
+Target: (null)
+
+Datastores:
+        Locations: ./C:Calendar
+Wbxml: Yes
+SyncML Version: (null)
+SupportsUTC: Yes
+SupportsNumberOfChanges: Yes
+SupportsLargeObjects: Yes
+
+libsyncml Version: 0.5.4 ($Revision: 1075 $)
+------------
+</pre>
+The good news here is that if you specify a directory as above then syncml-ds-tool actually does sync -- you can download from the phone, add something new to the directory, re-sync and have it appear on your phone.  The bad news is that with the version from libsyncml v. 0.5.4 you eventually run into an error of the form:
+<pre>
+&ltsome-path&gt/libsyncml-0.5.4/libsyncml/data_sync_api/data_sync_callbacks.c:653:E:smlDataSyncMappingCallback: Assertion "datastore->dsObject->mappingCallback" failed
+</pre>
+The syncml-ds-tool.c source code has the 'RegisterChangeStatusCallback' and 'RegisterMappingCallback' lines commented out, with no code to support them -- so not there I'm afraid.  Otherwise, syncml-ds-tool would be a sufficient command-line element to build a Linux sync system for the e72 around.  I suspect this is a result of something on the phone detecting a previous sync, and triggering the software to attempt to map the entires.
+<p>
+The good news here is that the svn version - libsyncml Version: 0.5.100 ($Revision: 1356 $) as of this writing -- mostly seems to work, in that records go back and forth between the desktop and phone.
+<p>
+To get the {M}(~)9999 hard masked ebuild of libsyncml on your gentoo system (this pulls the latest svn build), ensure you have the appropriate ~arch for app-pda/libsyncml in your /etc/portage/package.keywords and add '=app-pda/libsyncml-9999' to your /etc/portage/package.unmask file.  (now you really are on the bleeding edge...)
+<p>
+This is what I'm using now.  I put the three commands (Contacts, Calendar and Notes) in a shell script with 'sleep 2' after each -- otherwise it hangs.
+</li>
+<li>
+<b>osynctool</b>
+<p>
+This is the new version of the previous msynctool, apparently.  For Gentoo you will need to grab the ebuild from <a href="http://bugs.gentoo.org/show_bug.cgi?id=283228">bugs.gentoo.org</a>, place it in /usr/local/portage/app-pda/osynctool/ and do 'ebuild osynctool-0.39.ebuild digest'.  
+Finally with all the above I was able to get this almost working as well.  osynctool is similar to msynctool in that you need to create and add groups and members to get started:
+<pre>
+$ osynctool --addgroup e72
+$ osynctool --addmember e72 file-sync
+$ osynctool --addmember e72 syncml-obex-client
+$ osynctool --showgroup e72
+Group: e72
+Member 2: syncml-obex-client
+        No Configuration found: Plugin is not configured
+Member 1: file-sync
+        No Configuration found: Plugin is not configured
+</pre>
+The trickier bit is configuring each member with 'osynctool --configure e72 1' and 'osynctool --configure e72 2'.  I don't claim to understand the individual entries myself, but here are the configs I got working for <a href="file-sync_config.xml.gz">file-sync(.gz)</a> and <a href="syncml-obex-client_config.xml.gz">syncml-obex-client(.gz)</a>.  I don't use Evolution, but there are pages around describing the config for it.
+<p>
+All in all I wasn't able to make osynctool work very well.  As it says on the <a href="http://www.opensync.org/">opensync</a> website, the 0.3.x releases "are not recommended for end users or distribution packaging," and certainly this goes double for the svn version I also tried -- so nothing against them here.
+
+</ul>
+
+
+&nbsp;
+<p>
+1 january 2010
+</ul>
+</dl>
+
+<br>&nbsp;
+</body>
+</html>

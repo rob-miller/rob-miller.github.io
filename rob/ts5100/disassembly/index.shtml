@@ -1,0 +1,112 @@
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Keywords" content="disassemble toshibasatellite 5100-501, 5100 5105-S607, 5105">
+   <meta name="Author" content="Rob Miller">
+   <title>Disassembling the Toshiba Satellite 5100-501 / Satellite 5105-S607 and similar notebooks</title>
+</head>
+<body>
+
+<center><b><font size=+2>Disassembling the Toshiba Satellite 5100-501 / Satellite 5105-S607 </font></b></center>
+<center>rob miller -- rob at janerob dot com</center>
+
+<img src = "the_problem.jpg"> 
+<img src = "the_problem2.jpg"> 
+<p>
+Views of the problem.  This noise appears at random times on the
+screen, sometimes I can cause it by tapping around the case or
+typing.  With the nv driver the event may crash X, and with the Nvidia
+driver it happens less often but can kill Linux.
+<p>
+
+<img src = "headers.jpg">
+<p>
+I advise you not to do anything you see on this page,
+<em>especially</em> if you don't know how to handle these items.
+<p>
+<img src = "scratches.jpg">
+<p>
+Do as I say, not as I did.  Put something soft under the top of the
+case before you go working on the bottom screws.
+<p>
+<img src = "button-bezel.jpg">
+<p>
+On the top side, this plate surrounding the power and other custom
+buttons comes off and reveals screws holding down the keyboard.
+<p>
+<img src = "arrange-screws-2.jpg">
+<p>
+My advice is to place the screws in a pattern reflecting the way they
+come out.  These are the keyboard screws and five from more underneath
+the keyboard holding the case.
+<p>
+<img src = "screen-disassembly.jpg">
+<p>
+The bezel in front of the display is held down by two screws above the
+keyboard on each side of the Toshiba logo (behind black stickers).  Only
+remove the three screws on each side of the display (underneath blue
+stickers) if you want to get the LCD panel to be free as shown here.
+<p>
+<img src = "under-screen-bezel.jpg">
+<p>
+This is about all there is to see behind the screen bezel,
+though. There's no separate cover 
+in front of the LCD, so all those marks are there to stay.  I put
+a plastic sheet (a.k.a. "screen condom") over the screen (after this
+photo), but the bubbles still haven't worked out.
+<p>
+<b>The hidden screws on the bottom case</b>
+<p>
+There's one under the hard drive cover, but that's easy.
+<p>
+<img src = "under_battery.jpg">
+<p>
+There's a small one under the battery - I think it's just there to
+make sure you don't  forget and leave the battery in during
+disassembly.
+<p>
+<img src = "under-rj45.jpg">
+<p>
+Here's the other one, under the RJ-45 and RJ-11 sockets.  What goes in
+that big empty space, and where can I get one?  Is it supposed to be the wireless card?  I only
+have Bluetooth.
+<p>
+<img src = "arrange-screws.jpg">
+<p>
+Again, you will want to arrange the screws carefully as they come out
+(unless you're not planning to re-assemble!)
+<p>
+<img src = "under-case.jpg">
+<p>
+After that it's all pretty straightforward, if you're used to this
+kind of work.  The video card is on the left (includes the external
+monitor plug).
+<p>
+<img src = "vidcard-top.jpg">
+<p>
+Here's the video card I'd like to replace, top view...
+<p>
+<img src = "vidcard-bottom.jpg">
+<p>
+... bottom view.
+<p>
+<p>
+In the end I managed some improvement by cleaning the contacts on the
+video card, re-seating it, and putting the screws back tighter than
+they had been before.  Even better results came from switching back to
+the proprietary Nvidia X drivers, but that doesn't help on the frame
+buffer, console, boot disks, etc.
+
+<hr WIDTH="100%">
+June 2005 <br>
+rob miller -- <b>rob</b> at <b>janerob</b> dot <b>com</b><br>
+This page has been accessed 
+<!--#exec cgi="/cgi-bin/rcount.cgi" --> 
+times since 16 June, 2005 (ah, but how many waited for all the photos
+to download?). 
+<?php
+  phpinfo();
+?>
+</body>
+</html>
+

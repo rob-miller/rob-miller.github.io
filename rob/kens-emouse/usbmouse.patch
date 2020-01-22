@@ -1,0 +1,36 @@
+--- usbmouse.c.orig	2006-09-22 14:22:57.000000000 +0000
++++ usbmouse.c	2007-02-08 09:29:44.000000000 +0000
+@@ -84,6 +84,17 @@
+ 	input_report_key(dev, BTN_SIDE,   data[0] & 0x08);
+ 	input_report_key(dev, BTN_EXTRA,  data[0] & 0x10);
+ 
++	// rtm 2.x.2006
++	//info ("mouse urb %0x %0x %0x %0x %0x %0x ",data[0],data[1],data[2],data[3],data[4],data[5]);
++	
++	// using F19-F24 as various extra button symbols apparently ignored by Xorg
++	input_report_key(dev, KEY_F19, data[4] & 0x01);
++	input_report_key(dev, KEY_F20, data[4] & 0x02);
++	input_report_key(dev, KEY_F21, data[4] & 0x04);
++	input_report_key(dev, KEY_F22, data[4] & 0x08);
++	input_report_key(dev, KEY_F23, data[4] & 0x10);
++	input_report_key(dev, KEY_F24, data[4] & 0x20);
++
+ 	input_report_rel(dev, REL_X,     data[1]);
+ 	input_report_rel(dev, REL_Y,     data[2]);
+ 	input_report_rel(dev, REL_WHEEL, data[3]);
+@@ -183,6 +194,15 @@
+ 	input_dev->keybit[LONG(BTN_MOUSE)] |= BIT(BTN_SIDE) | BIT(BTN_EXTRA);
+ 	input_dev->relbit[0] |= BIT(REL_WHEEL);
+ 
++	// rtm 2.x.2006
++	// using F19-F24 as various extra button symbols apparently ignored by Xorg
++        set_bit(KEY_F19,input_dev->keybit);
++        set_bit(KEY_F20,input_dev->keybit);
++        set_bit(KEY_F21,input_dev->keybit);
++        set_bit(KEY_F22,input_dev->keybit);
++        set_bit(KEY_F23,input_dev->keybit);
++        set_bit(KEY_F24,input_dev->keybit);
++
+ 	input_dev->private = mouse;
+ 	input_dev->open = usb_mouse_open;
+ 	input_dev->close = usb_mouse_close;

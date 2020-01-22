@@ -1,0 +1,937 @@
+<html><head>
+
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Keywords" content="toshiba linux, linux satellite 5100-501, linux satellite 5100 linux satellite 5105-S607, linux satellite 5105">
+   <meta name="Author" content="Rob Miller"><title>Linux on Toshiba Satellite 5100-501 / Satellite 5105-S607 and similar notebooks</title></head><body>
+<center><b><font size="+2">Linux on Toshiba Satellite 5100-501 / Satellite 5105-S607 </font></b></center>
+<center>rob miller -- rob at janerob dot com</center>
+
+<!-- <p><center><b>this web page is still under construction</b></center></p> -->
+<br>February 2007         
+
+<center><hr width="100%"></center>
+
+<div id="adsense1">
+<center><p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-1801987312954275";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel ="";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</p></center>
+</div>
+
+<center><hr width="100%"></center>
+
+<b><font size="+2">Get the <a href="http://www.janerob.com/rob/ts5100/cPad">cPad driver</a> - LCD and middle button work!</font></b>
+<p><b>Latest news:</b> 
+
+</p><ul> 
+
+<li> <b>Fix your own video problems!</b> Pete has contacted me and
+described how he used a generic heat gun to re-flow the solder under
+the components on the circuit boards of his failing laptop.  Not for
+the faint-of-heart, all risk is yours, ymmv, etc. etc. but here's his
+<a href="pete.txt">story</a>.  Drop me a line if you try this and it
+works for you too.
+</li>
+<li> I am pleased to report some <b>good news</b> for me, I was able to get my
+motherboard repaired by Robert at <a
+href="http://www.fixmytoshibalaptop.com/">www.fixmytoshibalaptop.com</a>.
+I definitely recommend him in a big way.  Clearly I've changed my mind
+about the laptop being worth investing more money in, especially when
+I saw how much new UXGA laptops cost.  I guess now I have to get these
+pages up to date!
+</li>
+<li> Hardware problems with your satellite 510x, especially video
+card?  Join in the push for a class action lawsuit : check out the
+message board <a href="http://groups.msn.com/TOSHIBA5105DISPLAYPROBLEM">here</a> and/or
+go directly to the lawyer's site <a href="http://www.lorisklar.com/toshad.htm">here</a>.
+</li> 
+<li> December 2005: I was having some problems with my power supply,
+having to bang it on hard surfaces to get it working.  Ordered a
+replacement off eBay, but shortly before I got it I did the
+'banging' trick with the old one and left it charging the battery.
+Noticed the power light slowly cycling on and off, thought it would be
+best to just unplug it.  That was in August, just before we left
+London for Lusaka, and I haven't seen the laptop power on since.  If
+you find yourself with video card problems like mine (below), my
+advice is to not put any money into the laptop as it has probably
+reached the end of its useful life. </li>
+
+<li> June 2005: I've been having some problems with my video card.  Here's a new
+page on <a href="http://www.janerob.com/rob/ts5100/disassembly/index.shtml">Disassembling the Toshiba
+Satellite 5100-501</a>, but I didn't have much luck fixing it.  It would seem to
+be poor hardware design, resulting in overheating of the video chips;
+checkout <a href="http://www.notebookforums.com/showthread.php?t=48948&amp;page=1&amp;pp=15">this
+link</a> for grumpy windows users in the same boat.  I did get a
+replacement video card for �293 including VAT from Gultronics in London (Tottenham
+Court Rd), but don't know what the person who walked out of the shop
+with it said to them to avoid bringing the laptop in.
+</li>
+
+<li> Another <a href="http://www.janerob.com/rob/ts5100/ryan-hope.msg2">submission</a> from Ryan Hope,
+here's 
+<ul>
+<li> a <a href="http://www.janerob.com/rob/ts5100/cpad-2.6_v1.1.patch.bz2">patch</a> to put cpad
+directly into the kernel (not a module)</li>
+<li> a <a href="http://www.janerob.com/rob/ts5100/toshiba_fixes.patch.bz2">combo patch</a> containing
+the Toshiba ACPI patch plus bluetooth mods, the smbus fix and the
+firewire fix.</li>
+<li> a <a href="http://www.janerob.com/rob/ts5100/orinoco-0.15rc2.patch.bz2">patch</a> for the internal
+Orinoco wireless card.  This updates the in kernel version so scanning
+works. </li>
+</ul>
+Ryan sent those to me in late February, sorry I've been so slow in the
+updates!!!! </li>
+
+<li> Peter Zberg wrote to say he got 1600x1200 working (as opposed to
+1588x1200) with the Nvidia accelerated drivers using info from a
+<a href="http://www.linuxquestions.org/questions/history/312349">thread</a>
+at linuxquestions.org regarding similar problems on a 5105-s701.  The
+key posting is mirrored <a href="http://www.janerob.com/rob/ts5100/nv_xorg.conf_frag">here</a>. I went
+ahead and put the same sync freqs and modeline in my xorg.conf
+file, looks more appropriate and works fine; hmmm, perhaps I'll go
+back and try Nvidia drivers again, I've heard they support suspending
+now....</li>  
+
+
+<li> Update on the <a href="http://www.janerob.com/rob/ts5100/tosh-1394.patch">Firewire / IEEE1394
+patch</a> submitted by Oliver K.  (The patch linked is for a
+2.6.11-rc3 kernel, but the code in this section doesn't seem to have
+changed much in a while).  I had hoped to get this into the kernel,
+but the cognescenti tell me that it should more correctly be in as a
+'pci quirk'.  I haven't had time or learning how to do that yet, so
+here is where it stands for now.  As always, any submissions will be
+welcome! 
+</li>
+
+<li> got the in-kernel swsusp working with 2.6.11-rc2, using the
+hibernate script file from 
+<a href="http://softwaresuspend.berlios.de/">berlios</a> and the
+"UseACPISleep 4b" method (echo 4b &gt; /proc/acpi/sleep).  My
+hibernate.conf is somewhat gentoo specific, but 
+<a href="http://www.janerob.com/rob/ts5100/hibernate.conf">here</a> it is. </li>
+
+<li> Ryan Hope <a href="http://www.janerob.com/rob/ts5100/ryan-hope.msg">contributes</a>
+  <ul>
+  <li> this <a href="http://www.janerob.com/rob/ts5100/toshiba_enable_SMBus.patch">patch</a> for
+  drivers/pci/quirks.c to enable the SMBus so you can use lm_sensors!
+  After patching, you need to compile modules for 'I2C support', 'I2C
+  device interface', 'Intel 801' under I2C Hardware Bus support, 'Nat
+  Semi LM90 and compatibles' under 'Hardware Sensors Chip support',
+  and 'EEPROM reader' if you want it under 'Other I2C Chip
+  support'. </li>
+  <li> another modeline for the current Nvidia drivers with
+  Xorg/Xfree, best he can get (even with ignoreEDID and NVreg_Mobile)
+  is: 
+<pre>Modeline "1588x1200" 162 1588 1664 1856 2160 1200 1201 1204 125
+</pre>
+Thanks Ryan!
+</li>
+  </ul>
+</li><li> Oliver Koenig comes through again, <a href="http://www.janerob.com/rob/ts5100/1394.msg">here</a>'s 
+his report on getting firewire (ieee1394) working on the 5100.  I put
+the patch into my 2.6.10 kernel, but haven't tried it as I need to
+get a 6-pin to 4-pin firewire adapter before I can play with my new
+external drive (the old 40G internal) at full speed.  Thanks Oliver!</li>
+
+<li> a little update since someone asked in e-mail, despite any words to
+the contrary below in this needs-to-be-rewritten page, I curently (Jan
+2005) run Gentoo Linux with a 2.6 kernel and Xorg.  I recently upgraded to an
+80G drive, at that point I dumped my Windows partition entirely -- just 
+never got used so why waste the space? </li>
+
+<li> Got my screen replaced under the 3-year warranty due to the
+'washed out pixels'.  No hassles, looks great, shiny spot is gone too.</li>
+
+<li> <a href="http://www.janerob.com/rob/ts5100/xf86-concurrent">Here</a>'s a report on getting
+concurrent LCD and TV-out working from Oliver Koenig</li>
+
+<li> The Winmodem works (!!!) with the SmartLink drivers from <a href="http://www.smlink.com">www.smlink.com</a>.</li>
+
+<li> Tom Lukasiak got the 1600x1200x16 framebuffer working!  Tiny-font
+fiends (like me!) rejoice! The magic
+incantation is vga=0x346 in your lilo.conf (grub users adjust
+appropriately).</li>
+
+<li> Jan Steinhoff has re-written the cPad driver for kernel 2.6!
+Proper framebuffer device support, works with the XFree86 Synaptics
+Touchpad driver, and images sent in a single URB.  Works great but I
+still haven't switched to 2.6 full time because swsusp hasn't been
+there yet.  Check it out at <a href="http://www.personal.uni-jena.de/%7Ep1stja/linux/cpad.html">Jan's
+page</a>.</li>
+
+</ul>
+
+<p>
+<img src="r5100.jpg" align="right" height="373" width="265">
+</p><p>
+<b><font size="+2">Contents</font></b>
+</p><ul>
+<li>
+<a href="#disclaim">Disclaimer:</a> Not me, guv...</li>
+
+<li>
+<a href="#overview">Overview:</a> What works, what doesn't, what I haven't tried</li>
+
+<li>
+<a href="#hwspecs">Hardware Specs:</a> Details of the 5100-501</li>
+
+<li>
+<a href="#swspecs">Software Specs:</a> Debian 3 (Woody), 2.4.21rc1+ACPI+SWSUSP (as of 28 Apr 03), XFree86 4.1.0 (4.3 server)</li>
+
+<li>
+<b>Updated</b> <a href="#display">Display:</a> 1600x1200 Nvidia X server, 1280x1024 framebuffer console, TV out, CRT out</li>
+
+<li>
+<a href="#kbdmouse">Keyboard &amp; Mouse:</a> key repeat, middle mouse button, cPad LCD</li>
+
+<li>
+<a href="#sound">Sound:</a> Alsa, intel ICH3</li>
+
+<li>
+<a href="#acpi">Toshiba modules / ACPI:</a> Motivation, kernel patch, Toshiba extras, SWSUSP</li>
+
+<li>
+<a href="#dvd">DVD/CD/CDRW:</a> Making each work </li>
+
+<li>
+<a href="#hdisk">Disk Drives:</a> USB floppy, hard disk to full speed</li>
+
+<li>
+<a href="#connect">Connecting Up:</a> Ethernet, PCMCIA, IrDA (SIR), [Belkin USB-serial]</li>
+
+<li>
+<a href="#kernel">Kernel:</a> Review in case I missed anything</li>
+
+<li>
+<a href="#install">Linux Installation:</a> Getting loaded the first time</li>
+
+<li>
+<a href="#wxp">Windows XP partition:</a> Just leave it.
+
+</li><li>
+<a href="#likes">Likes:</a> Yes, I'd buy one again</li>
+
+<li>
+<a href="#dislikes">Dislikes:</a> Grrrrr....</li>
+
+<li>
+<a href="#still">Still Working On:</a> SD card slot?</li>
+
+<li>
+<a href="#files">Files:</a> Configuration examples</li>
+
+<li>
+<a href="#links">Links:</a> Other info, other sites</li>
+
+<li>
+<a href="#utilities">Utilities:</a> Some code I've hacked up</li>
+
+<li>
+<a href="#year1">1 ^H^H 2 year review:</a> How it's holding up...</li>
+
+<li>
+<a href="http://www.janerob.com/rob/ts5100/disassembly/index.shtml">Disassembling the Toshiba Satellite 5100-501</a> You don't
+have to, you can just look at the pictures.</li>
+
+</ul>
+
+<p><br><a name="disclaim"></a><b><font size="+2">Disclaimer</font></b>
+</p><p>This is my best effort at documenting what I've done to get Linux running on my Toshiba Satellite 5100-501.
+What you do with the information, which may include errors, is fully your own responsibility.
+I assume you have basic Linux skills including the ability to configure, build and install your own kernel.
+Furthermore, my effort here is to supply information, not a turnkey solution for your system -- you may actually
+have to <b>look</b> at the configuration and other files I have supplied.  The files here have
+generally not been cleaned up.  
+<b>Use at your own risk.</b>  All trademarks are the property of their respective owners.  Finally, many of
+the links are a bit old now, you should definitely look for the latest versions of the X server, ACPI patch, 
+etc.  -- check the source websites in the links.
+<br>&nbsp;
+
+<center><hr width="100%"></center>
+ 
+<div id="adsense2">
+<center><p>
+<script type="text/javascript"><!--
+google_ad_client = "pub-1801987312954275";
+google_ad_width = 728;
+google_ad_height = 90;
+google_ad_format = "728x90_as";
+google_ad_type = "text_image";
+google_ad_channel ="";
+//--></script>
+<script type="text/javascript"
+  src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+</script>
+</p></center>
+</div>
+
+<center><hr width="100%"></center>
+
+
+</p><p><a name="overview"></a><b><font size="+2">Overview</font></b>
+</p><p><b>Things I've got working:</b> faster hard disk, ACPI + some Toshiba extras, ethernet,
+1280x1024 framebuffer, 1600x1200 X windows, TV out, RGB out, DVD/CDRW, sound, 
+SIR IrDA (minor issues), PCMCIA CF, 'Toshiba' and 'Internet' buttons, middle mouse button, cPad LCD, 
+serial (with a Belkin USB-serial), SWSUSP (suspend to swap partition).
+
+</p><p><b>Things that don't yet work:</b> trickery with the small lcd.
+
+</p><p><b>Things I haven't tried yet:</b> bluetooth, FIR IrDA, S/P DIF, SD or SmartMedia cards, 
+1394 Firewire.
+<br>&nbsp;
+
+</p><p><a name="hwspecs"></a><b><font size="+2">Hardware Specs</font></b>
+</p><p>
+This <a href="http://www.janerob.com/rob/ts5100/t5105.pdf">document</a> from Toshiba describes the overall specification of the 5105-S607, which I believe
+to be the US version of the 5100-501 (without Bluetooth or the <a href="http://www.janerob.com/rob/ts5100/laptop_choices.html">'Treasure Island'</a> price).  
+Here's my <a href="http://www.janerob.com/rob/ts5100/dmesg.out">dmesg</a> output and <a href="http://www.janerob.com/rob/ts5100/lspcivv.out">lspci -vv</a> output for your perusal.
+Note that the IDE controller is <b>not</b> actually the Intel PIIX4 as selected in the kernel config, but it is recognised
+as ICH3M (82801CAM) during boot.
+</p><p>
+The main points of interest for me are:
+</p><ul>
+<li> Pentium 4, 1.7Ghz, 512mb SDRAM</li>
+<li> 1600x1200 (UXGA) display, Nvidia NV17 GeForce4 440 Go controller with 32mb DDR RAM</li>
+<li> 40 Gb hard disk, ATA100 5400 rpm Toshiba MK4019GAX (not the GAP model as reported in a UK review)</li>
+<li> DVD/CD/CDRW combo drive, Toshiba SD-R2102
+</li><li> cPad trackpad with 3 mouse buttons </li>
+</ul>
+<p></p><p>
+Geeks like me may also care about:
+</p><ul>
+<li> Intel 82845 AGP bridge</li>
+<li> Intel 82801 CA/CAM (ICH3-M) interface controller used for:</li>
+  <ul>
+  <li> UHCI USB hub</li>
+  <li> SMSC LPC47N227 SuperIO chip on LPC interface (apparently only IrDA is used)</li>
+  <li> IDE U100 disk interface</li>
+  <li> AC'97 Audio controller (i810 chipset)</li>
+  <li> AC'97 Modem (Toshiba)</li>
+  <li> EtherExpress PRO/100 VE ethernet</li>
+  </ul>
+<li> ToPIC95 Toshiba Cardbus bridge (PCMCIA for us oldies)</li>
+<li> TI TSB43AB22 Firewire (IEEE 1394) controller</li>
+</ul>
+See the <a href="http://www.janerob.com/rob/ts5100/dmesg.out">dmesg</a> and <a href="http://www.janerob.com/rob/ts5100/lspcivv.out">lspci -vv</a> output for more info.
+<br>&nbsp;
+<p><a name="swspecs"></a><b><font size="+2">Software Specs</font></b>
+</p><p>Information on this web page is based on the following configuration:
+</p><ul>
+<li> <a href="http://www.debian.org/">Debian</a> Linux 'Woody' release (Debian 3)</li>
+<li> kernel <a href="http://www.kernel.org/">2.4.21rc1</a> ACPI and SWSUSP patches</li>
+<li> <a href="http://www.xfree86.org/">XFree86</a> version: 4.1.0.1 (4.3.0 Xserver) </li>
+</ul> 
+I recommend nothing less.  
+<br>&nbsp;
+<p><a name="display"></a><b><font size="+2">Display</font></b>
+
+</p><p>(update 15 April 03) 
+
+</p><p>I currently use^H^H^H^H^H^H^H^H^H^H^H^H^H was using the UXGA (1600x1200) server option for this system from 
+<a href="http://www.nvidia.com/object/unix.html">Nvidia</a>.  The drawbacks are that this 'taints'
+the kernel with a non-GPL module, that -currently- there is no power management support 
+(so suspend/resume breaks right here), and that it won't work with the 2.5 kernels by default.  On the positive side, 
+TwinView (for TV and RGB output with X windows) and the framebuffer interaction works, plus it's fast and pretty.
+</p>
+<p> There are patches available to make this work on 2.5, I used them successfully during my SWSUSP odyssey.  Check out the 
+<a href="http://www.minion.de/nvidia.html">minion</a> and/or <a href="http://mirror.devolus.org/gentoo-portage/media-video/nvidia-kernel/files/">devolus</a> sites.
+</p><p>
+Here's my <a href="http://www.janerob.com/rob/ts5100/XF86Config-4nv">NVidia XF86Config-4</a> file.  In addition to the more technical features, I've
+set the 'NoLogo' option to skip the Nvidia splash screen and set 'DigitalVibrance' to 2 (range is 0-4).  
+Check out the Nvidia README to learn more options.
+</p><p>
+On some variations of this laptop users have reported to me some problems under X.  Alan Danziger (Toshiba 5105-S901) needed
+</p><pre>Options "IgnoreEdid"  "true"
+</pre>
+<br>
+in the XF86Config-4 file, while Steve Dean (Toshiba 6100) reported a
+black line on the right side of the display, and worked out that he
+needed to modify os-registry.c in the
+Nvidia kernel driver to have
+<br>
+<br>
+<pre> Vreg_SoftEDIDs = 0 (disable checking - default was 1)
+ NVreg_Mobile = 2 (non-Compal Toshiba - default was ~0)
+</pre>
+<br>
+in order to get the full 1600x1200.
+<br>
+<br>
+Your mileage may vary.
+<p></p><p>
+<b>TV out:</b> The config file above is set up to display on both the TV and LCD panel at 800x600 when/if
+you (re)start the X server with the TV output connected.  TV sound works as well.  J. Belmonte's work (toshiba_acpi module)
+supports TV out as a video option through the /proc/acpi/toshiba interface.  Note, the toshiba_acpi code will let you
+put a console on the TV screen (hmmm, haven't tried with SVGAlib yet) without a reboot, but putting X on the TV always 
+seems to require re-starting the X server.
+</p><p>
+<b>Update:</b> Oliver Koenig wrote me with an XF86Config-4 file that
+activates both the LCD and TV-out whether the TV is connected or not.
+Don't know if the Nvidia chip is happy about this but it's probably ok
+since X lets you do it...  The magic lines are
+</p><pre>  Option       "MetaModes"                "1024x768, 1600x1200; NULL,1600x1200"
+  Option       "ConnectedMonitor"         "TV, DFP"
+</pre>
+and <a href="http://www.janerob.com/rob/ts5100/xf86-concurrent">here</a>'s his report.
+
+<p></p><p>
+<b>RGB out:</b> RGB output is a little trickier (or really simple -- just reboot with the monitor plugged in).  
+To have software control, you need to install John Belmonte's 
+<a href="http://memebeam.org/toys/ToshibaAcpiDriver">Toshiba Extras</a> ACPI module kernel patch.  Switching 
+puts the console on the external monitor as well 
+as the X server, however the default setup above has TwinView using 800x600 when enabled.  To get the full 
+resolution, you need to select the second ServerLayout by starting with "startx -- -layout CRT".  You can switch 
+the XF86Config-4 file ServerLayout sections around so that the RGB TwinView is the default rather than the TV support 
+and thus use xdm, but that's left as an exercise to the reader (see the comments in the file).  As noted on J.
+Belmonte's pages, you should go to the console, switch LCD/CRT, and then go back to X.  Sometimes doing this I get
+to a state where the LCD panel can't sync on the console framebuffer, but no big deal as the external monitor is there
+after all.
+</p><p>
+<b>Framebuffer:</b> Compile the VESA framebuffer into the kernel (I
+also like the 8x8 compiled-in font myself), and put vga=0x31a
+(1280x1024 at 16 bits color) or vga=0x346 for 1600x1200x16 (thanks Tom
+Lukasiak and <a href="http://portal.suse.com/sdb/en/2001/05/wessels_easy_fbdev.html">a
+SUSE web page</a>).
+into your <a href="http://www.janerob.com/rob/ts5100/lilo.conf">lilo.conf</a>.  See the 
+<a href="http://www.tldp.org/HOWTO/Framebuffer-HOWTO.html">framebuffer howto</a>.  You may need to convert that to a decimal value for older lilo's.  
+I think you also need the <a href="http://www.janerob.com/rob/ts5100/XF86Config-4x">XF86Config-4</a> file's Frame Buffer section in order to 
+switch between X and the console.  No, TV out (at least to my TV :-) won't handle the 1280x1024 framebuffer, I just go 
+back to vga=extended.
+</p><p>
+Extra thanks to macemoneta on the <a href="http://forums.compuserve.com/vlforums/default.asp?SRV=Toshiba&amp;loc=us&amp;access=public">Compuserve Toshiba list</a> for supplying his XF86Config-4 file, which was the basis 
+for most of this.
+</p><p>
+If you do need to switch around between console and X while using the CRT or TV out, my findings are that you need 
+to re-start X with the alternate video already plugged in.  Presumably this is because the Nvidia driver will be accessing the
+graphics chip directly, independent of the Toshiba BIOS (HCI) commands used by the /proc/acpi interface.
+</p><p>
+The <b>update</b> bit is mostly covered under SWSUSP in the <a href="#acpi">acpi</a>
+section. Mainly I am happily running the XFree86 4.3 X server, though
+most of my X software is still 4.1, and it wasn't too painful a
+download. No, the TV and CRT out are not working at all yet for this
+server...
+<br>&nbsp;
+</p><p><a name="kbdmouse"></a><b><font size="+2">Keyboard &amp; Mouse</font></b>
+</p><p>
+There's an annoying key repeat problem under X windows, my solution is to use 'xkbset' as well as a 
+special keymap (Xmodmap) to enable the 'windows' and 'menu' keys for use as extra mousebuttons.  
+<a href="http://rooster.stanford.edu/%7Eben/toshiba/keyboard.php">Ben Lynn's site</a> explains that the spurious keypresses
+have the characteristic that the keyrelease is <b>immediate</b>, thus we can use an XKB preference called 'SlowKeys' to 
+allow only keypresses that last a minimum length of time.  Another XKB preference disables the bell that this setting
+enables.  Next, one requires software to work with the XKB API and manage these features; I use 
+<a href="http://www.math.missouri.edu/%7Estephen/software/#xkbset">xkbset</a>
+by Stephen Montgomery-Smith (also in <a href="http://packages.debian.org/unstable/x11/xkbset.html">Debian unstable</a>).
+Under Debian, I place this <a href="http://www.janerob.com/rob/ts5100/40custom-rtm">script</a> in /etc/X11/Xsession.d to implement the key fix for 
+all users (and - I think - the xdm login) as well as load my <a href="http://www.janerob.com/rob/ts5100/Xmodmap">Xmodmap</a> file.  There are several
+other fixes for this problem around the net.
+</p><p> 
+The mouse is USB, thus the 'USB Human Interface Device (full HID) support' is recommended, and see the 
+<a href="http://www.janerob.com/rob/ts5100/XF86Config-4x">XF86Config-4</a> file for the protocol.  I haven't made any effort to set up gpm thus far.
+</p><p>
+If you load my <a href="http://www.janerob.com/rob/ts5100/cPad">cPad</a> driver module, you can get the middle mouse button working (and won't need 
+the hid module above).  See
+<a href="http://memebeam.org/toys/ToshibaAcpiDriver">John Belmonte's</a> toshiba_acpi work to use/access the 'Toshiba' 
+and 'internet' buttons next to the power button.
+</p>
+
+<br>&nbsp;
+<p><a name="sound"></a><b><font size="+2">Sound</font></b>
+</p><p>Sound options are either the i810 code that comes with the kernel distribution, or the Advanced Linux 
+Sound Architecture (<a href="http://www.alsa-project.org/">ALSA</a>) software distribution.  Here's some random
+hints which may be useful either way:
+</p><ul>
+<li>The <a href="http://xine.sourceforge.net/">Xine</a> DVD player works with 
+both ALSA and the kernel's OSS i810 driver (thanks Sean Neakums)</li>
+<li>I've read that you need the <a href="http://sourceforge.net/projects/acpi">ACPI</a> patch to get sound working on
+this system -- I can't confirm that, but I do use the patch.</li>
+<li>On at least two occasions I achieved a state in which sound was not working and then began to work after booting
+into WindowsXP.  One of these was after the battery had run down completely.  Possibly WXP initialises something that
+the Linux side does not, however I've not seen this happen for some time.</li>
+<li>If you build ALSA from source, the mixer levels are set to '0' and muted by default.  Run alsamixer, use the arrow keys
+to adjust the levels (resolution is a function of the window you run in), use the 'm' key control muting.  Here's my 
+<a href="http://www.janerob.com/rob/ts5100/asound.state">/etc/asound.state</a> file to try if you can't work out what needs to be enabled to get some noise out.  Don't forget there's also an 
+external volume control ;-)</li>
+<li>If you go with the Debian binaries, I found the default sound levels to be set too high (in the red), causing distortion.</li>
+<li>If you want both the kernel and the ALSA options, modularise the
+kernel drivers. You must build both 'Sound Card Support'
+and 'Intel ICH (i8xx) audio support' as modules. If you don't build
+'Sound card support' as a module, you'll see the error
+"alsamixer: function snd_ctl_open failed for default: No such file or
+directory" when you try to set sound levels with alsamixer.</li>
+<li>If you build ALSA from source, start with 
+"<font face="Courier New,Courier">./configure  --with-sequencer=yes  --with-oss=yes --with-cards=intel8x0</font>" as suggested 
+by <a href="http://www.condorito.org/Toshiba">Nicolas Beaulieu</a>.</li>
+
+</ul>
+<p>
+<br>&nbsp;
+</p><p><a name="acpi"></a><b><font size="+2">Toshiba modules / ACPI</font></b>
+</p><p> As noted above, I'm using the <a href="http://sourceforge.net/projects/acpi">ACPI patch</a>. The benefits are
+at least some of the following:
+</p><ul>
+<li>ALSA (sound) works</li>
+<li>pressing the 'power' button for less than 4 seconds halts the system nicely</li>
+<li>/proc/acpi contains a subdirectory with CPU temperature in celsius rather than kelvin (which can be displayed on the <a href="http://www.janerob.com/rob/ts5100/cPad">cPad</a>.</li>
+</ul>
+Also as noted above, I'm using John Belmonte's <a href="http://memebeam.org/toys/ToshibaAcpiDriver">Toshiba Extras</a> kernel
+patch/module, which is based on the work of <a href="http://www.buzzard.org.uk/toshiba">Jonathan Buzzard</a>.  
+This is now included in the ACPI patch.  The benefits here are:
+<ul>
+<li>fan control</li>
+<li>LCD brightness control</li>
+<li>enable console on external RGB monitor</li>
+<li>enable console TV out</li>
+<li>enable sysevent fifo to see 'toshiba' and 'internet' buttons</li>
+</ul>
+<p>There's also the <a href="http://www.buzzard.org.uk/toshiba">Jonathan Buzzard</a> toshiba.o module (toshutils) already in the
+kernel source tree, this will only work if you exclude <b>all</b> the ACPI code from the kernel.  In this case, load the module
+with the option "tosh_fn=0x62" to get the hotkeys (function keys) working.  Alternatively, and still subject to the ACPI problem
+as far as I know, try Charles Schwieters' <a href="http://www.schwieters.org/toshset/">toshset</a> utility (works without 
+toshiba.o).  I have heard that the problem with ACPI is not present in the 2.5 kernels.
+</p>
+<p>
+<b>SWSUSP:</b>
+</p><p>I am successfully using the <a href="http://sourceforge.net/projects/swsusp">SWSUSP</a> patch (also see <a href="http://fchabaud.free.fr/English/default.php3?COUNT=3&amp;FILE0=Tricks&amp;FILE1=Laptop&amp;FILE2=Swsusp">here</a>), 
+a fully Linux solution for suspending to a swap partition.  This required switching to the XFree86 Xserver version 4.3, and 
+I'm now on kernel 2.4.21-rc1 with the <a href="http://sourceforge.net/projects/acpi">ACPI</a> patch.  I was having a problem
+with the (non-kernel) PCMCIA code -- couldn't see the bridge after resuming -- but I have found that the kernel-PCMCIA code
+does all I need now; compile the code in (not modularised), I'm only using CardBus.  There is a bug in the 
+smc-ircc IrDA code, see my <a href="http://www.janerob.com/rob/ts5100/irda.html">IrDA page</a> for the fix while I wait for it to get into the kernel.
+</p><p>
+There is a problem with the 2.4.20 ACPI-patched kernel, fixed in the
+20030321 and later ACPI patches. The problem appears as
+a general slowdown for the whole system, and if you run 'top' you'll
+see 'system' getting 99-100% of the CPU with 'keventd' accumulating
+loads of time. There is a "fix" (the correct term is actually "hack"
+:-) that I heard of second-hand from Marco Trevisani: </p><p>
+
+  Edit drivers/acpi/events/evrgnini.c, go to end of function
+  'acpi_ev_pci_config_region_setup()' and comment out the line that
+  reads
+</p><p>
+  acpi_os_derive_pci_id (node, region_obj-&gt;region.node, &amp;pci_id);
+</p><p>
+  (in the 2.4.21-pre3 is at line 274).
+</p><p>
+This doesn't seem like the best solution to me, but it seems to work
+without any other side-effects that I've noticed. A better solution
+as of today is to use kernel 2.4.21-pre5 or later; there is an ACPI
+patch (without the bug) and the SWSUSP patch from &lt;
+href="http://fchabaud.free.fr/English/default.php3?COUNT=3&amp;FILE0=Tricks&amp;FILE1=Laptop&amp;FILE2=Swsusp"&gt;fchabaud.free.fr
+for the previous ACPI-patched kernel -almost- works (check and fix the
+errors by hand when you apply the patch!).
+</p><p>
+I tried a <b>lot</b> of different things before I finally got this all working.  Here's the main 'gotchas':
+</p><ul>
+<li>
+The NVidia X server (as of version 1.0-4349) won't play with SWSUSP; the module 'nvidia.o' can't be removed even after the 
+server has been suspended.  I switched to the server from XFree86, version 4.3.  Debian 'stable' is currently on X 4.1, but 
+I found that I only needed to get the server and a few supporting files from <a href="http://people.debian.org/%7Emmagallo/packages/xfree86/i386/">an unofficial deb site</a>
+to get up and running (around 5mb through my dial-up, but I went ahead
+and got about 10mb more to update the libraries and extensions). The
+only initial change to my <a href="http://www.janerob.com/rob/ts5100/XF86Config-4x">XF86Config-4</a> file was to set the 'Driver'
+entry to "nv"; later I set the HWCursor to off as the mouse pointer was messed up and maybe changed a few other things.</li>
+<li>
+Use the 'suspend.sh' script from the SWSUSP sites, after you've run it --install it creates a 'hibernate' script which wraps
+around the kernel part of SWSUSP and sorts out modules, X, and system services before the actual suspend and after the resume.
+'Hibernate' uses an <a href="http://www.janerob.com/rob/ts5100/suspend.conf">/etc/suspend.conf</a> file, you'll want to look in there for the words 'nvidia' and 'acpi' (if you use the 
+ACPI-patch version) and do what it says.  Suspend.sh works out your distribution and creates 'hibernate' appropriately; for 
+version 0.13 on Debian I still needed to make a few tweeks to suspend.conf.</li>
+<li>Compile in the main USB code (not modularised) except for the
+actual device drivers like bootp and HID (if you want to use my cPad
+driver). <b>Update:</b> I'm back to modularising <em>all</em> the USB
+code now, in agreement with the SWSUSP docs.</li>
+</ul>
+<p>
+I think that's it, the main thing should be knowing that it <b>really does work</b> on the this laptop once you can get a
+non-NVidia X solution.  Here's today's 2.4.20 kernel <a href="http://www.janerob.com/rob/ts5100/config.2420swsusp">.config</a> file in case I missed anything.
+</p><p>
+(28 Apr 03) I am using the 20030328 ACPI patch with the swsusp-rc1-1924
+and swsusp-1925-incremental patches. You need to read the mailing list
+(linked off the SWSUSP FAQ page) to work out which patch goes with
+which kernel, but seems reliable
+for me at the moment. I did have some problems when the kernel compile
+wasn't just right, e.g. having it look for ide-cd as a
+module when it was compiled-in, and the 0424 ACPI patch seems to play
+ok with the SWSUSP patches but the resulting kernel doesn't
+suspend/resume reliably.
+</p>
+<p> I bought a Gig of RAM and had problems
+with SWSUSP (kernel 2.4.25), had to patch the kernel to make it all appear in LOWMEM
+-- see my <a href="http://marc.theaimsgroup.com/?l=swsusp-devel&amp;m=107833644503438&amp;w=2">post</a>
+to the swsusp mailing list at SourceForge for the details of my
+solution.  This is all sorted with current SWSUSP and the 2.4.26
+kernel -- no need to patch.
+</p>
+
+
+<br>&nbsp;
+<p><a name="dvd"></a><b><font size="+2">DVD/CD/CDRW</font></b>
+</p><ul>
+<li><b>DVD:</b> The main trick here is to build the kernel with the UDF file system (module is fine).  Beyond this, I was using 
+the <a href="http://xine.sourceforge.net/">Xine</a> DVD player (needs ALSA) with the DivX codec, but now (14 Aug 02) I also use 
+<a href="http://www.dtek.chalmers.se/groups/dvd">Ogle</a> for ease of set-up for things I didn't have working with xine.  
+April 2003, I'm an mplayer user today, get all my .deb packages for this from the <a href="http://marillat.free.fr/">Marillat</a> site.<p>  
+Note I link /dev/dvd to /dev/scd0.  Check out 
+<a href="http://www.condorito.org/Toshiba/#dvd">NB's page</a> for more on ogle and xine players.  I don't yet have the 
+TOSLINK to optical minijack adapter to try the S/P DIF (Dolby digital AC-3) output, but the ALSA docs indicate that it isn't
+supported for this chipset.  
+</p></li><li><b>CDRW:</b> This is just as described in the <a href="http://www.tldp.org/HOWTO/CD-Writing-HOWTO.html">CD-Writing howto</a>, you need to enable SCSI emulation, SCSI CDROM, and the CDROM 
+filesystem(s) in the kernel (modules ok), then append "hdc=ide-scsi" in your <a href="http://www.janerob.com/rob/ts5100/lilo.conf">lilo.conf</a>. </li>
+</ul>
+<br>&nbsp;
+<p><a name="hdisk"></a><b><font size="+2">Disk Drives</font></b>
+</p><ul>
+<li><b>floppy disk:</b> this is another USB device, enable "USB Mass Storage support" and "SCSI disk support" in the kernel, then the 
+device on my system is /dev/sda0 (see my <a href="http://www.janerob.com/rob/ts5100/fstab">/etc/fstab</a> sampling).</li>
+
+<li><b>hard disk:</b> (update 14 Aug 02) enable 'use PCI DMA by default when available' in the kernel, this seems to do away with
+the need for either the <a href="http://www.janerob.com/rob/ts5100/0hdparm">hdparm script</a> or the lilo options (ide0=dma).  
+<!--you'll see the appended "idebus=66" in my <a href="lilo.conf">lilo.conf</a>, but I don't think this actually
+does anything.  The real speed-up comes from turning on DMA ASAP during the boot process with the statement "ide0=dma".  I also 
+set several features with hdparm in <a href="0hdparm">this file</a>, which goes in my /etc/rc.boot directory (place as appropriate for
+your distribution) [<b>not for 2.5</b> kernel]. --> I use and recommend the ext3 filesystem.</li>
+</ul>
+<br>&nbsp;
+<p><a name="connect"></a><b><font size="+2">Connecting Up</font></b>
+</p><p>Except for the ethernet, this section is all about connecting up to my <a href="http://www.handera.com/">TRGpro</a> (essentially a Palm IIIxe with Compact Flash).
+</p><ul>
+<li><b>ethernet:</b> I've used both the Intel e100 driver and the EtherExpressPro/100 as modules and compiled 
+in to my kernel.  I've switched back to Becker's EtherExpressPro driver as a module, as the e100 'beat detection' seemed to
+stop working for me (needed for programs like Debian's <a href="http://packages.debian.org/testing/admin/laptop-net.html">laptop-net</a> 
+to respond to plugging in the cable.</li>
+<li><b>PCMCIA:</b> The kernel-based PCMCIA now (2.4.20) works for my CF card, so I'm using it with just the support programs from the  <a href="http://pcmcia-cs.sourceforge.net/">PCMCIA</a> site. </li>
+<li><b>IrDA SIR:</b> "X Windows, PCMCIA CF, IrDA SIR -- choose any two (well, almost)."  Try my <a href="http://www.janerob.com/rob/ts5100/irda.html">IrDA instructions</a>
+to initialise the 82801CAM and SMSC 47N227 chips as a serial COM port
+and use with pilot-link for Palm IR file transfers. The 47N227 works
+with the 'SMC IrCC' kernel driver. Unfortunately, with the 2.4 kernel
+this only seems to work on irq 3 -- and this is needed for the PCMCIA
+IDE (ide-cs) support to see the Compact Flash card as a disk (a cheap
+adapter allows you to plug CF into PCMCIA slots). I thought that the
+2.5 kernel ICH3M code would sort this out, but no; if anyone can tell
+me why only irq 3 works for these devices, please drop me a line! <p>
+A good work-around is to add 'pre-install ide-cs /etc/init.d/irda stop'
+and 'post-remove ide-cs /etc/init.d/irda start' in /etc/modules.conf.
+Also, this doesn't play perfectly well with SWSUSP because (I -finally-
+figured out) irattach sometimes won't go away on a SIGTERM after a few
+hibernation cycles; check my <a href="http://www.janerob.com/rob/ts5100/irda">/etc/init.d/irda</a> script for a solution that is working for me.  (even works with Gnome Pilot, check out <a href="http://lyre.mit.edu/%7Epowell/evolution">Adam Powell's site</a> for debs to make the GnomeCal conduit work!)
+</p></li><li><b>serial:</b> so I got a used Belkin USB-serial converter (for �12!) and was using the cradle for "quick" pilot-link 
+Palm file installs.
+I only mention it here because I had to work out that the thing to do is add a script containing "stty -F /dev/ttyUSB0 57600" 
+to be called as a "post-install" for the belkin_sa module (in other words, have it set the default serial port speed when the 
+module is hotplug-loaded on plugging in to the USB; also note it's tty<b>USB</b>0, and doesn't pick up the $PILOTRATE environment
+variable).</li>
+</ul>
+<br>&nbsp;
+<p><a name="kernel"></a><b><font size="+2">Kernel</font></b>
+</p><p>Here's my kernel <a href="http://www.janerob.com/rob/ts5100/config">.config</a> file.  Of particular note:
+</p><ul>
+<li><b>Processor type and features</b>: I build the Toshiba code as a
+module, I may keep playing with it; MTRR works, and I enable Local and
+IO APIC support even though it doesn't recognise the 82801 (I hacked
+the kernel to make it work once, but there
+didn't seem to be any benefit -- /proc/interrupts still says XT-PIC for
+everything).</li>
+<li><b>General setup</b>: Enable PCI support, PCI name database (upgrade to the latest at <a href="http://pciids.sourceforge.net/">http://pciids.sourceforge.net</a>).  Enable support for hot-pluggable devices (USB also uses) and PCMCIA (for me -- see <a href="#connect">connecting</a>) but not PCI Hotplug code.  Power Management support yes.
+<ul>
+<li><b>ACPI</b>: I build in everything except 'CPU Enumeration (no) only' and 'Toshiba Laptop Extras' (build as module).  Remember 
+that I only have these options because I've patched with both the ACPI and John Belmonte Toshiba code (see the <a href="#acpi"> ACPI comments</a>).</li>
+</ul>
+</li><li><b>MTD, par port, PnP</b>: no.</li>
+<li><b>Block devices</b>: don't need Normal PC floppy, do need loopback dev support as module for testing CD images.</li>
+<li><b>IDE, ATA ...</b>: IDE CDROM built in, SCSI emulation as a module; Intel PIIXn chipset as it works.  </li>
+<li><b>1394</b>: haven't tried it -- send me something to use it with ? :-)</li>
+<li><b>IrDA</b>: see my <a href="#connect">connecting</a> comments; I module/enable everything plus drivers IrTTY, IrPORT 
+and SMC IrCC. (note there's a new improved smsc-ircc2 out, see the irda page)</li>
+<li><b>Input core support</b>: yes, for USB mouse; I enable the Event interface in hopes of cPad play.</li>
+<li><b>Character devices</b>: Mice no (not needed for USB mouse), though I stll seem to need the P/S2 mouse module for cPad.
+</li><li><b>File systems</b>: yes, you want to use Ext3; it's easy to switch.  ISO9660 plus extensions for CD work, /proc, 
+UDF needed for DVDs.</li>
+<li><b>Console drivers</b>: VESA frame buffer enabled here.</li>
+<li><b>Sound</b>: modularise both 'Sound card support' and 'Intel ICH (i8xx)' if you want to be able to use this or ALSA.</li>
+<li><b>USB</b>: Preliminary USB device filesystem; UHCI alternate
+driver; USB Mass Storage support for the floppy, full HID support for
+the mouse, or use my cPad driver.</li>
+<li><b>Bluetooth</b>: haven't tried it -- send me something to talk to ? :-)</li>
+</ul>
+<p></p><p>You may also want to see my <a href="http://www.janerob.com/rob/ts5100/modules.conf">/etc/modules.conf</a> and <a href="http://www.janerob.com/rob/ts5100/modules">/etc/modules</a>
+files (/etc/modules is Debian specific, I understand Gentoo uses
+/etc/modules.autoload, while Suse/RedHat may use entries in
+/etc/sysconfig).
+<br>&nbsp;
+</p><p><a name="install"></a><b><font size="+2">Linux Installation</font></b>
+</p><p> The easiest way to get an install started was to download the disk images from the Debian distribution
+subdirectory dists/woody/main/disks-i386/ into a directory on the Windows XP partition.  Then boot from a DOS
+floppy and use the loadlin program (through install.bat) as found in the Debian tools subdirectory.  Drop me a line if
+you know a tweek for the XP 'command prompt only' boot mode to give it enough memory to run loadlin.  Check 
+your local <a href="http://www.debian.org/misc/README.mirrors">mirror</a> of ftp://ftp.debian.org/debian 
+to find these files.  <b>Update:</b> My, how things change.  Now I'd
+say the easiest thing is to boot off a knoppix cd and build your hard
+drive partition the way you want it for the initial install.
+
+</p><p>The boot device can be selected at power-on or reboot: be holding down the left or right arrow key when
+the Toshiba splash screen shows.  This will pause the boot procedure until you hit [enter], booting from the 
+selected icon (hdd, cd, fdd, network, PC card ATA device).
+<br>&nbsp;
+
+</p><p><a name="wxp"></a><b><font size="+2">Windows XP partition</font></b>
+</p><p>The system comes with two formatted VFAT partitions, with Windows XP Home installed on the first.  
+I suggest that you don't trash the Windows XP partition for the following reasons:
+</p><ul>
+<li>This is a '<a href="http://www.microsoft.com/hwdev/NewPC/legacyIO.htm">legacy free</a>' system, 
+thus the definitive Toshiba BIOS manipulation software -- e.g. to set boot device order, or set the owner
+string in the subLCD  -- (currently) only runs here.</li>
+<li>Might be the only way to get digital sound (S/P DIF) out for the DVD.</li>
+<li>Even after <a href="#install">installation</a>, it's useful to have a Linux system that you can get
+to with just a DOS boot floppy for those times when you really mess up. :-) </li>
+<li>It's the only way to check that the hardware really works, and see how.</li>
+<li>If you don't convert to NTFS, the disk space remains available through VFAT. </li>
+<li>The Toshiba recovery CD supports (with many "Advanced User Only!" warnings) partition-only recovery and 
+recognises Linux partitions.
+</li></ul>
+<br>&nbsp;
+<p><a name="likes"></a><b><font size="+2">Likes</font></b>
+</p><p>It works as well (almost!) as I had hoped, and lived up to the <a href="http://www.janerob.com/rob/ts5100/laptop_choices.html">expectations</a>
+ I'd developed from researching on the net.  Certainly all of the "core" Linux functionality is working.
+</p><ul>
+<li>The case build is brilliant.  Everything works, feels solid, no creaks, the doors don't pop off or look 
+like they will.</li>
+<li>The UXGA display is everything I'd hoped for.  There are no dead pixels, 
+</li><li>It feels fast.</li>
+<li>The recovery CD is as Linux friendly as would be reasonably expected.</li>
+<li>Having used it over 3 months now, the keyboard feels good and is "easy to type fast on".  
+</li></ul>
+<br>&nbsp;
+<p><a name="dislikes"></a><b><font size="+2">Dislikes</font></b>
+</p><p>
+</p><ul>
+<li>It appears that Toshiba declined to supply the wires or external connectors for hardware that I believe
+exists internally:
+<ul>
+<li>no S-Video (S-VHS) out -- I think it loses the "desktop replacement" label here for not supplying full 
+quality DVD playback.  <b>Update:</b> I've found a cable which brings
+out an S-video connector from the same plug, but haven't tried it yet...
+</li><li>the SMSC 47N227 supplying the IR also has (by the <a href="http://www.smsc.com/main/datasheet.html">documentation</a>) 
+serial, parallel and FDC ports -- "legacy free" indeed...</li>
+</ul>
+I would have provided a proprietary external connector and "extra ports" accessory, but I can understand the
+economic argument that serial and parallel ports are available as a USB dongle for Windows users, and perhaps a videophile
+1394 solution as well.  I would prefer to have a standard serial port and S-Video output with a converter down to 
+composite.</li>
+<li>It is just slightly warmer than I'd prefer when using it for 2-3 hours
+on my lap (could be <a href="http://www.theregister.co.uk/content/54/28245.html"> worse</a>).  The CPU temperature while editing this has ranged from 60-70 C 
+(fan comes on at 70).
+</li><li>There appears to be no interface available (even under Windows) to <i>really</i>
+save battery power when off. Specifically
+the ethernet active LED, the PC-off CD player facility (it can be
+locked off manually after shutdown), and the small
+LCD (trivial consumption) all stay on. The upshot is that the "shelf
+life" to a completely dead battery when turned off seems short (2-3
+days if I recall correctly). </li>
+<li>I would prefer to have direct BIOS access; although rarely accessed, it would make some things easier.
+An OS-neutral solution would be to publicly document the API available for setting up the PC hardware.</li>
+</ul>
+<br>&nbsp;
+<p><a name="still"></a><b><font size="+2">Still Working On</font></b>
+</p><ul>
+<li><b>cPad</b>: an <a href="http://www.janerob.com/rob/ts5100/cPad">entertaining</a> toy -- and still room for improvment.  
+<a href="http://sourceforge.net/projects/usbsnoop/">SnoopyPro</a> is useful here.</li>
+</ul>
+<br>&nbsp;
+<p><a name="files"></a><b><font size="+2">Files</font></b>
+<table>
+<tbody><tr>
+<td> <a href="http://www.janerob.com/rob/ts5100/cPad">cPad_driver</a> </td>
+<td> <a href="http://www.janerob.com/rob/ts5100/dmesg.out">dmesg</a> </td>
+<td> <a href="http://www.janerob.com/rob/ts5100/lspcivv.out">lspci -vv</a> </td>
+<td> <a href="http://www.janerob.com/rob/ts5100/XF86Config-4nv">XF86Config-4-nvidia</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/XF86Config-4x">XF86Config-4-XFree86-4.3</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/lsusb.out">lsusb</a> </td>
+</tr>
+<tr>
+<td> <a href="http://www.janerob.com/rob/ts5100/lilo.conf">lilo.conf</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/40custom-rtm">X-keyboard script</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/Xmodmap">user Xmodmap</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/asound.state">/etc/asound.state</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/hdparm.out">hdparm -i /dev/hda</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/suspend.conf">/etc/suspend.conf</a></td>
+</tr>
+<tr>
+<td> <a href="http://www.janerob.com/rob/ts5100/fstab">/etc/fstab</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/0hdparm">/etc/rc.boot/0hdparm</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/config">/usr/src/linux/.config</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/modules.conf">/etc/modules.conf</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/modules">/etc/modules</a></td>
+<td> <a href="http://www.janerob.com/rob/ts5100/irda">/etc/init.d/irda</a></td>
+</tr>
+</tbody></table>
+
+<br>&nbsp;
+</p><p><a name="links"></a><b><font size="+2">Links</font></b>
+<br>&nbsp;
+
+</p><p>
+Some related Linux on Toshiba laptops pages:
+</p><ul>
+<li><a href="http://rooster.stanford.edu/%7Eben/toshiba/">Ben Lynn</a></li>
+<li><a href="http://www.mobilix.org/toshiba_s5005_s504.html">Marco Trevisani</a></li>
+<li><a href="http://www.condorito.org/Toshiba/">Nicolas Beaulieu</a> -- thanks for the page format!</li>
+<li><a href="http://www.garg.com/bob/sftw/toshiba_5005_S507.html">Bob Van Cleef</a></li>
+<li><a href="http://www.xploiters.org/tosweb/ts2450es.html">Samuel G. Cristobal</a> (spanish)</li>
+</ul>
+
+<p></p><p>
+Toshiba-spcific Linux utilities:
+</p><ul>
+<li><a href="http://www.buzzard.org.uk/toshiba/">Jonathan Buzzard</a></li>
+<li><a href="http://memebeam.org/toys/ToshibaAcpiDriver">John Belmonte</a> (ACPI) </li>
+<li><a href="http://fnfx.sourceforge.net/">Fnfx</a> Hotkey utilities
+(like mine, but probably better supported) </li>
+</ul>
+
+<p></p><p>
+Drivers:
+</p><ul>
+<li><a href="http://downloadfinder.intel.com/scripts-df/Detail_Desc.asp?ProductID=61&amp;DwnldID=2896">Intel e100 driver</a>  </li>
+<li><a href="http://www.nvidia.com/object/unix.html">Nvidia</a> </li>
+<li><a href="http://www.minion.de/nvidia.html">kernel 2.5 patches for NVidia X server</a></li>
+<li><a href="http://mirror.devolus.org/gentoo-portage/media-video/nvidia-kernel/files/">more kernel 2.5 patches for NVidia X server</a>
+</li><li><a href="http://pcmcia-cs.sourceforge.net/">PCMCIA</a> </li>
+<li><a href="http://sourceforge.net/projects/acpi">ACPI4Linux</a></li>
+<li><a href="http://sourceforge.net/projects/swsusp">SWSUSP at sourceforge</a></li>
+<li><a href="http://fchabaud.free.fr/English/default.php3?COUNT=3&amp;FILE0=Tricks&amp;FILE1=Laptop&amp;FILE2=Swsusp">more SWSUSP</a>
+</li><li><a href="http://www.alsa-project.org/">ALSA</a></li>
+</ul>
+
+<p></p><p>
+Toshiba Support sites:
+</p><ul>
+<li><a href="http://linux.toshiba-dme.co.jp/linux/index.htm">Linux for Toshiba PCs</a> (Japan)</li>
+<li><a href="http://newsletter.toshiba-tro.de/main/index.html">Installation Infos</a> (Germany)</li>
+</ul>
+
+<p></p><p>
+Mailing lists (see also the Japan site above):
+</p><ul>
+<li><a href="http://putland.linux-site.net/mailman/listinfo/toshiba-5005">Toshiba-5005</a></li>
+<li><a href="http://forums.compuserve.com/vlforums/default.asp?SRV=Toshiba&amp;loc=us&amp;access=public">Compuserve forum</a></li>
+</ul>
+
+<p></p><p>
+Suggested software:
+</p><ul>
+<li><a href="http://www.math.missouri.edu/%7Estephen/software/#xkbset">xkbset</a></li>
+<li><a href="http://xine.sourceforge.net/">Xine</a></li>
+<li><a href="http://www.dtek.chalmers.se/groups/dvd">Ogle</a></li>
+</ul>
+
+<p></p><p>
+More info:
+</p><ul>
+<li><a href="http://www.smsc.com/main/datasheet.html">47n227 datasheet</a> </li>
+<li><a href="http://www.intel.com/design/chipsets/datashts/290716.htm">82801CA/CAM datasheet</a></li>
+<li><a href="http://www.linux-usb.org/">Linux USB</a></li>
+<li><a href="http://www.tldp.org/">The Linux Documentation Project</a></li>
+</ul>
+
+<p></p><p>
+
+links to other pages that might get other parts of the hardware working(haven't tried them yet myself):
+</p><ul>
+<li><a href="http://nicolas.bettenburg.free.fr/linux/">Bluetooth</a> (5100-201)
+</li></ul>
+
+<p></p><p>
+And of course:
+</p><ul>
+<li><a href="http://www.linux-laptop.net/">Linux on Laptops</a></li>
+</ul>
+
+<br>&nbsp;
+<p><a name="utilities"></a><b><font size="+2">Utilities</font></b>
+<br>
+</p><p>
+</p><ul>
+<li><a href="http://www.janerob.com/rob/ts5100/tkeymon.c">tkeymon.c</a> and <a href="http://www.janerob.com/rob/ts5100/tkeymon.conf">tkeymon.conf</a>,
+a hotkey daemon and config file. You can specify programs that always
+run on a Toshiba button or Fn-key press, have it toggle between two
+programs for one button (lock/unlock the keyboard and display), or have
+it run a specific program on the Nth button press (I used have the
+'world' button start xdm the first time it was pressed, then start
+Netscape thereafter). Here's the scripts I wrote for my config file
+(all pretty trivial):
+<ul>
+<li><a href="http://www.janerob.com/rob/ts5100/netscape-rob">netscape-rob</a> and <a href="http://www.janerob.com/rob/ts5100/konsole-rob">konsole-rob</a>,
+scripts to start these programs as me on X windows (change to your own
+favourite account name, not so good if you have multiple X users).</li>
+<li><a href="http://www.janerob.com/rob/ts5100/tosh-lock">tosh-lock</a> and <a href="http://www.janerob.com/rob/ts5100/tosh-unlock">tosh-unlock</a>, scripts to lock the keyboard and turn off the display.</li>
+<li><a href="http://www.janerob.com/rob/ts5100/vidswitch.pl">vidswitch.pl</a>, a perl script to cycle through the display output devices (LCD, CRT, TV).</li>
+<li><a href="http://www.janerob.com/rob/ts5100/brighter.pl">brighter.pl</a> and <a href="http://www.janerob.com/rob/ts5100/dimmer.pl">dimmer.pl</a>, perl scripts to manipulate the display brightness.</li>
+<li><a href="http://www.janerob.com/rob/ts5100/umej">umej</a>, a -really- trivial script to unmount and eject the CD.</li>
+<li><a href="http://www.janerob.com/rob/ts5100/mute">mute</a> and <a href="http://www.janerob.com/rob/ts5100/unmute">unmute</a> -- if you have alsa installed, these take care of the sound.</li>
+</ul>
+<b>Update:</b> Also check out <a href="http://fnfx.sourceforge.net/">Fnfx</a> for
+another take on this same idea.
+</li>
+<li>see my usr-cpad.c program on the <a href="http://www.janerob.com/rob/ts5100/cPad">cPad</a> page, I've tweeked it so that it remembers the display
+data through a swsusp.</li>
+<li><a href="http://www.janerob.com/rob/ts5100/battmon.c">battmon.c</a>
+a battery monitor daemon which switches to performance state P1 when AC
+is unplugged and runs 'hibernate' (SWSUSP) when the battery goes below
+the 'alarm' setting. To get around a minor buglet in ACPI/SWSUSP (won't
+detect if the AC is un/plugged while suspended), you should restart
+this in /etc/suspend.conf</li>
+</ul>
+<p>
+ooops, I see my webhost isn't serving up the .pl scripts; great.  here is a <a href="http://www.janerob.com/rob/ts5100/ts5100-perl.tar.gz">tar.gz file</a>
+
+<br>&nbsp;
+</p><p><a name="year1"></a><b><font size="+2">The almost 1 year review</font></b>
+<br>
+</p><p>
+
+Yes, I'm still very happy with it and use it as a desktop replacement day-in and day-out.  The only problems have been 
+that the display has developed some 'washed out pixels' around the top and right edges, and at some point I seem to have 
+cleaned the screen too vigorously and made a shiny spot near the middle.  The washed out pixel problem is  very subtle and 
+I can only really detect it when KDE flashes a grey screen before putting up it's normal background -- I tried to find a 
+Windows background that would make it show up when I had it in the shop once (trashed the cPad while experimenting :-), but 
+concluded that the Toshiba techs are trained to be unable to perceive display problems...  The shiny spot is only noticeable 
+when it is off and sometimes when I am working at the console; perhaps there is a layer of plastic that I could replace 
+protecting the LCD to fix this, but the only Toshiba repair facility on this continent is in South Africa (I bought my 
+laptop in London, then moved to Nigeria -- so much for that 3 year warranty!).
+</p><p>
+I don't use it on my lap anymore so the heat isn't a problem, and there are no problems with the case at all.
+</p><p>
+Wow, one week short of one year since I bought it and I have everything working to my satisfaction!  Good thing I Haven't
+needed to get the winmodem working :-).
+</p><p>
+<b>Year 2 Update:</b> Still going strong, especially with the new
+screen...  And I <em>do</em> have the winmodem working now, too....
+</p><p>
+<b>Year 4+ Update:</b> I lost a year of use due to the video card
+problem and moved completely back to a desktop in that time.  The 5100
+is still my work laptop though, and holding up very well.  I got one
+of <a
+href="http://www.amazon.com/gp/product/B0000BVYTV/qid=1137710842/sr=8-9/ref=pd_bbs_9/102-5278536-1559307?n=507846&s=electronics&v=glance">these</a>
+at Staples and always use it.
+</p><p><br>
+
+</p><hr width="100%">
+February 2007<br>
+rob miller -- <b>rob</b> at <b>janerob</b> dot <b>com</b><br>
+This page has been accessed 
+<!--#exec cgi="/cgi-bin/rcount.cgi" -->
+times since Oct 2005 (oopsie, sysadmin reset my counter sometime
+around then, so lost the count from 27 Oct 2002, plus some other time
+that the counter's been off) 
+
+</body></html>

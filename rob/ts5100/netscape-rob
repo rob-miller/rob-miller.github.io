@@ -1,0 +1,2 @@
+#!/bin/sh
+/bin/su -c "export DISPLAY=:0.0 ; netscape >& /dev/null" - rob

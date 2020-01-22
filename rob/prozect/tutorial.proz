@@ -1,0 +1,163 @@
+-*- mode: outline -*-
+
+*{2003/12/2} Welcome to Prozect
+**{2003/12/2} Prozect is a hierarchical ...
+***{2003/12/2} outliner
+***{2003/12/2} todo list
+***{2003/12/2} project manager ?
+**{2003/12/2} Prozect is modelled on Progect
+***{2003/12/2} a Palm OS application
+***{2003/12/2} by Laurent Burgbacher
+***{2003/12/2} http://progect.sf.net
+**{2003/12/2} Prozect is released under GPL
+***{2003/12/2} the code started as ZOutline
+***{2003/12/2} by Serge Stinkwich
+
+*{2003/12/2} Item types
+**{2003/12/2} info item
+***{2003/12/2} an info item is just text
+**[o]{2003/12/2} action item (todo)
+***{2003/12/2} an action item has a checkbox
+**[7/10]{2003/12/2} numeric item
+***{2003/12/2} takes 2 numbers
+****{2003/12/2} numerator = amount done?
+****{2003/12/2} denominator = amount to do?
+***{2003/12/2} displays a completion bar
+**[]{2003/12/2} progress item
+***{2003/12/2} reflects subtask completion
+***{2003/12/2} calculated as mean of children
+***[o]{2003/12/2} sub-task 2
+***[4/10]{2003/12/2} numeric
+***[+]{2003/12/2} sub-task 1
+***[]{2003/12/2} another progress
+
+*{2003/12/2} Usage
+**{2003/12/10} adjust columns
+***{2003/12/10} with stylus on
+***{2003/12/10} bars between
+***{2003/12/10}  item | days | note
+***{2003/12/10} headings
+**{2003/12/2} see the Outline menu 
+***{2003/12/2} for document control:
+***{2003/12/2} open, save
+****{2003/12/2} new via open dialog
+***{2003/12/2} undelete 
+****{2003/12/2} retreives from trash
+**{2003/12/2} new entries
+***{2003/12/2} click the star-document button
+****{2003/12/2} next to the trash can
+****{2003/12/2} to clear the input field
+***{2003/12/2} write text in the input field
+****{2003/12/2} at the top left of the screen
+***{2003/12/2} select the item type 
+****{2003/12/2} with the drop-down menu
+***{2003/12/2} <enter> (/) to register the item
+**{2003/12/2} edit existing entries
+***{2003/12/2} select the item
+***{2003/12/2} change the item type 
+****{2003/12/2} with the drop-down menu
+***{2003/12/2} change the item text 
+****{2003/12/2} in the input field
+***{2003/12/2} <enter> (/) to register the change
+**{2003/12/10} move entry
+***{2003/12/10} select item
+***{2003/12/10} tap arrow buttons
+***{2003/12/10} next to input field
+**{2003/12/2} add date
+***{2003/12/2} select the item
+***{2003/12/2} tap the date button 
+****{2003/12/2} at the top right of the window
+***{2003/12/2} choose the day
+***{2003/12/10} days column only
+***{2003/12/10} updates on re-display,
+***{2003/12/10} e.g. go to desktop and
+***{2003/12/10} back to Prozect
+**{2003/12/10} clear date
+***{2003/12/10} select item
+***{2003/12/10} tap x by date button
+**{2003/12/2} add note
+***{2003/12/2} select the item
+***{2003/12/2} tap in the note column
+***{2003/12/2} write your note
+***{2003/12/2} tap ok to finish
+****{2003/12/2} select this line and try it
+Notes can be multi-line, and probably very long.
+Tap ok to save changes or x to dump them.
+
+**{2003/12/10} clear note
+***{2003/12/10} open note
+***{2003/12/10} delete all text
+***{2003/12/10} tap ok
+**{2003/12/2} delete entries
+***{2003/12/2} select the item
+***{2003/12/2} tap the trash can icon
+**{2003/12/10} clear selection
+***{2003/12/10} tap star-document button
+***{2003/12/10} same as new entry
+
+*{2004/6/2} keyboard shortcuts
+Use <Tab> to jump around the different input window panes; the keyboard shortcuts are mostly of use in the 'outline' pane.  Use the 5-way button to highlight an item, then press and hold the <Fn> and <left-shift> keys while you tap one of the other keys.
+
+Basically everything is on the 8 keys around 'K', plus 'D' for "delete" and 'P' for "save" (because it is next to 'O' for "open" and far away from 'D').
+
+Use the 5-way button to expand or collapse subtrees, and mark ToDo items completed.
+
+Note that in the File Select window, you must <tab> to the pane with the files to select before the 5-way button will work.
+**{2004/6/2} Tab to window pane
+**{2004/6/2} ctrl keys (Fn-shift-<key>)
+***{2004/6/2} J= move item left
+***{2004/6/2} i,l,m=up,right,down
+***{2004/6/2} n= new item
+***{2004/6/2} u= undelete
+***{2004/6/2} o=open file
+***{2004/6/2} p= save file (next to o)
+***{2004/6/2} ,;= add note
+***{2004/6/2} d= delete
+**{2004/6/2} other actions with
+**{2004/6/2} 5-way button, ok, cancel
+**{2004/6/2} see note above for more
+*{2003/12/2} Options
+**{2003/12/2} show numbering
+***{2003/12/10} every item is numbered
+**{2003/12/2} show creation date
+***{2003/12/10} select item
+***{2003/12/10} see date button
+**{2003/12/2} show age
+***{2003/12/10} days since creation
+***{2003/12/10} in days column
+**{2003/12/2} sort on date
+***{2003/12/10} as shown in days column
+**{2003/12/10} autosave
+***{2003/12/10} save without asking
+**{2003/12/10} todo: show completed
+***{2003/12/10} don't hide when checked
+**{2003/12/10} todo: parent->child
+***{2003/12/10} checking parent 
+***{2003/12/10} checks all children
+**{2003/12/10} todo: child->parent
+***{2003/12/10} checking all children
+***{2003/12/10} checks parent
+**{2003/12/10} TAP: purge actions
+***{2003/12/10} delete checked items
+***{2003/12/10} shown or not
+***{2003/12/10} only children of selected item
+***{2003/12/10} or all if no selection
+***{2003/12/10} (tap 'new item' - star doc button -
+***{2003/12/10} to clear selection)
+**{2003/12/10} TAP: purge trash
+***{2003/12/10} no more undelete of 
+***{2003/12/10} items that were deleted
+***{2003/12/10} before this tap
+
+*{2003/12/10} Help - What's This mode
+**{2003/12/10} select this menu item
+**{2003/12/10} tap a control
+**{2003/12/10} see balloon help
+
+*{2003/12/2} file format - see note ->
+Prozect uses emacs outline-mode format, with some minor extensions.
+Learn about outline-mode on the web, e.g. at http://www.emacswiki.org/cgi-bin/wiki.pl/OutlineMode
+or of course you can just look at Prozect documents in emacs!
+
+
+

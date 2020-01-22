@@ -1,0 +1,14 @@
+vista:~# hdparm -i /dev/hda
+
+/dev/hda:
+
+ Model=TOSHIBA MK4019GAX, FwRev=FA002A, SerialNo=32LD6256T
+ Config={ Fixed }
+ RawCHS=16383/16/63, TrkSize=0, SectSize=0, ECCbytes=46
+ BuffType=unknown, BuffSize=0kB, MaxMultSect=16, MultSect=off
+ CurCHS=16383/16/63, CurSects=16514064, LBA=yes, LBAsects=78140160
+ IORDY=on/off, tPIO={min:120,w/IORDY:120}, tDMA={min:120,rec:120}
+ PIO modes: pio0 pio1 pio2 pio3 pio4
+ DMA modes: sdma0 sdma1 sdma2 mdma0 mdma1 mdma2 udma0 udma1 udma2 udma3 udma4 *udma5
+ AdvancedPM=yes: unknown setting WriteCache=enabled
+ Drive Supports : Reserved : ATA-1 ATA-2 ATA-3 ATA-4 ATA-5

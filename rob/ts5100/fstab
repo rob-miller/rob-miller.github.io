@@ -1,0 +1,12 @@
+# /etc/fstab: static file system information.
+#
+# <file system>	<mount point>	<type>	<options>			<dump>	<pass>
+/dev/hda2	/		ext3	defaults,errors=remount-ro	0	1
+/dev/hda3	none		swap	sw	0	0
+proc		/proc		proc	defaults			0	0
+/dev/sda0	/floppy		vfat	defaults,user,noauto		0	0
+/dev/scd0	/cdrom		iso9660	defaults,ro,user,noauto		0	0
+/dev/dvd        /dvd	        udf	defaults,ro,user,noauto         0       0
+/dev/hda1	/wxp		vfat	defaults,rw,user		0	0
+/cd_image.iso	/cd_image	iso9660	ro,loop=/dev/loop0,noauto	0	0
+/dev/hde1	/CF		vfat	defaults,rw,user,noauto		0	0

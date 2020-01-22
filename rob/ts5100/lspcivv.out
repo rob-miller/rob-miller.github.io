@@ -1,0 +1,174 @@
+00:00.0 Host bridge: Intel Corp. 82845 845 (Brookdale) Chipset Host Bridge (rev 04)
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ >SERR- <PERR-
+	Latency: 0
+	Region 0: Memory at e0000000 (32-bit, prefetchable) [size=256M]
+	Capabilities: [e4] #09 [d104]
+	Capabilities: [a0] AGP version 2.0
+		Status: RQ=31 SBA+ 64bit- FW+ Rate=x1,x2
+		Command: RQ=0 SBA- AGP+ 64bit- FW- Rate=<none>
+
+00:01.0 PCI bridge: Intel Corp. 82845 845 (Brookdale) Chipset AGP Bridge (rev 04) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 64
+	Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
+	Memory behind bridge: fd000000-fdffffff
+	Prefetchable memory behind bridge: d7f00000-dfffffff
+	BridgeCtl: Parity- SERR- NoISA- VGA+ MAbort- >Reset- FastB2B-
+
+00:1d.0 USB Controller: Intel Corp. 82801CA/CAM USB (Hub  (rev 02) (prog-if 00 [UHCI])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 11
+	Region 4: I/O ports at efe0 [size=32]
+
+00:1d.1 USB Controller: Intel Corp. 82801CA/CAM USB (Hub  (rev 02) (prog-if 00 [UHCI])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+	Interrupt: pin B routed to IRQ 7
+	Region 4: I/O ports at ef80 [size=32]
+
+00:1d.2 USB Controller: Intel Corp. 82801CA/CAM USB (Hub  (rev 02) (prog-if 00 [UHCI])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+	Interrupt: pin C routed to IRQ 6
+	Region 4: I/O ports at 1000 [size=32]
+
+00:1e.0 PCI bridge: Intel Corp. 82801BAM/CAM PCI Bridge (rev 42) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+	Bus: primary=00, secondary=02, subordinate=05, sec-latency=64
+	I/O behind bridge: 0000d000-0000dfff
+	Memory behind bridge: fce00000-fcefffff
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+
+00:1f.0 ISA bridge: Intel Corp. 82801CAM ISA Bridge (LPC) (rev 02)
+	Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+
+00:1f.1 IDE interface: Intel Corp. 82801CAM IDE U100 (rev 02) (prog-if 8a [Master SecP PriP])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 6
+	Region 0: I/O ports at cff8 [size=8]
+	Region 1: I/O ports at cff4 [size=4]
+	Region 2: I/O ports at cfe8 [size=8]
+	Region 3: I/O ports at cfe4 [size=4]
+	Region 4: I/O ports at cfa0 [size=16]
+	Region 5: Memory at 20000000 (32-bit, non-prefetchable) [size=1K]
+
+00:1f.5 Multimedia audio controller: Intel Corp. 82801CA/CAM AC'97 Audio (rev 02)
+	Subsystem: Toshiba America Info Systems: Unknown device 0002
+	Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 0
+	Interrupt: pin B routed to IRQ 10
+	Region 0: I/O ports at 1400 [size=256]
+	Region 1: I/O ports at 1040 [size=64]
+
+00:1f.6 Modem: Intel Corp. 82801CA/CAM AC'97 Modem (rev 02) (prog-if 00 [Generic])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap- 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Interrupt: pin B routed to IRQ 10
+	Region 0: I/O ports at 1800 [size=256]
+	Region 1: I/O ports at 1080 [size=128]
+
+01:00.0 VGA compatible controller: nVidia Corporation NV17 [GeForce4 440 Go] (rev a3) (prog-if 00 [VGA])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 248 (1250ns min, 250ns max)
+	Interrupt: pin A routed to IRQ 5
+	Region 0: Memory at fd000000 (32-bit, non-prefetchable) [size=16M]
+	Region 1: Memory at d8000000 (32-bit, prefetchable) [size=128M]
+	Region 2: Memory at d7f80000 (32-bit, prefetchable) [size=512K]
+	Expansion ROM at <unassigned> [disabled] [size=128K]
+	Capabilities: [60] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [44] AGP version 2.0
+		Status: RQ=31 SBA- 64bit- FW+ Rate=x1,x2
+		Command: RQ=31 SBA- AGP+ 64bit- FW- Rate=<none>
+
+02:07.0 FireWire (IEEE 1394): Texas Instruments TSB43AB22 1394a-2000 Controller (prog-if 10 [OHCI])
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Interrupt: pin A routed to IRQ 11
+	Region 0: Memory at fce00000 (32-bit, non-prefetchable) [disabled] [size=2K]
+	Region 1: Memory at fce04000 (32-bit, non-prefetchable) [disabled] [size=16K]
+	Capabilities: [44] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=55mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+		Status: D3 PME-Enable- DSel=0 DScale=0 PME-
+
+02:08.0 Ethernet controller: Intel Corp. 82801CAM (ICH3) Chipset Ethernet Controller (rev 42)
+	Subsystem: Toshiba America Info Systems EtherExpress PRO/100 VE
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 64 (2000ns min, 14000ns max), cache line size 08
+	Interrupt: pin A routed to IRQ 4
+	Region 0: Memory at fceff000 (32-bit, non-prefetchable) [size=4K]
+	Region 1: I/O ports at df40 [size=64]
+	Capabilities: [dc] Power Management version 2
+		Flags: PMEClk- DSI+ D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+		Status: D0 PME-Enable+ DSel=0 DScale=2 PME-
+
+02:0b.0 CardBus bridge: Toshiba America Info Systems ToPIC95 PCI to Cardbus Bridge with ZV Support (rev 32)
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 64
+	Interrupt: pin A routed to IRQ 11
+	Region 0: Memory at fce01000 (32-bit, non-prefetchable) [size=4K]
+	Bus: primary=02, secondary=04, subordinate=04, sec-latency=0
+	I/O window 0: 00000000-00000003
+	I/O window 1: 00000000-00000003
+	BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt+ PostWrite+
+	16-bit legacy interface ports at 0001
+
+02:0b.1 CardBus bridge: Toshiba America Info Systems ToPIC95 PCI to Cardbus Bridge with ZV Support (rev 32)
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Latency: 64
+	Interrupt: pin B routed to IRQ 10
+	Region 0: Memory at fce02000 (32-bit, non-prefetchable) [size=4K]
+	Bus: primary=02, secondary=05, subordinate=05, sec-latency=0
+	I/O window 0: 00000000-00000003
+	I/O window 1: 00000000-00000003
+	BridgeCtl: Parity- SERR- ISA- VGA- MAbort- >Reset- 16bInt+ PostWrite+
+	16-bit legacy interface ports at 0001
+
+02:0c.0 System peripheral: Toshiba America Info Systems: Unknown device 0804 (rev 03)
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B+ ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Interrupt: pin B routed to IRQ 10
+	Region 0: Memory at fce00800 (32-bit, non-prefetchable) [disabled] [size=32]
+	Capabilities: [80] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+		Status: D3 PME-Enable- DSel=0 DScale=0 PME-
+
+02:0d.0 System peripheral: Toshiba America Info Systems: Unknown device 0805 (rev 03)
+	Subsystem: Toshiba America Info Systems: Unknown device 0001
+	Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+	Status: Cap+ 66Mhz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+	Interrupt: pin A routed to IRQ 11
+	Region 0: Memory at fce00a00 (32-bit, non-prefetchable) [disabled] [size=512]
+	Capabilities: [80] Power Management version 2
+		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+		Status: D3 PME-Enable- DSel=0 DScale=0 PME-
+
