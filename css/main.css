@@ -37,10 +37,6 @@ p.warn {
     color: red;
 }
 
-ul {
-    font-size: 1.2em;
-}
-
 
 .post ul { 
     margin: 20px auto 40px; 
@@ -69,5 +65,21 @@ img {
   padding-bottom: 8px;
   font-size: 1.0;
     border: 1px solid black;
+}
+
+.cv a {
+    text-decoration: none;
+    color: #399;
+}
+.cv a:hover {
+    text-decoration: underline;
+}
+
+.cv ul {
+    font-size: 1.0em;
+}
+
+ul {
+    font-size: 1.2em;
 }
 
