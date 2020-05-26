@@ -121,5 +121,6 @@ ABS and Nylon 80C
 For my use I stay about 10C below the relevant glass temperature in the table above for the max setting for the internal thermostat (as discussed above it creeps a few degrees above this) for 6 hours or so - I just leave it going until there doesn't seem to be any more water coming out.  I have measured 0.2-1.0% change in weight for a 1Kg spool of PETG filament after 6 hours at 70C.  For silica gel I set it to 105C.
 
 
+![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fjanerob.com%2Fblog%2F2018%2F05%2F18%2Ffilament-dryer)
 
 
