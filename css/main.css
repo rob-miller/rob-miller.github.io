@@ -37,6 +37,10 @@ p.warn {
     color: red;
 }
 
+p.head1 {
+    font-size: 2em;
+    font-style: bold;
+}
 
 .post ul { 
     margin: 20px auto 40px; 
