@@ -1,0 +1,12 @@
+BEGIN:VCARD
+VERSION:3.0
+PRODID:-//Apple Inc.//macOS 12.0.1//EN
+N:Miller;Rob;;Dr.;
+FN:Dr. Rob Miller
+EMAIL;type=INTERNET;type=HOME;type=pref:rob@janerob.com
+TEL;type=CELL;type=VOICE;type=pref:+5926402008
+TEL;type=CELL;type=VOICE:+447807911929
+ADR;type=HOME;type=pref:;;;Georgetown;;;Guyana
+item1.URL;type=pref:https://www.janerob.com
+item1.X-ABLabel:_$!<HomePage>!$_
+END:VCARD
