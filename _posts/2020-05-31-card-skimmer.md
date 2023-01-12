@@ -2,6 +2,7 @@
 layout: post
 title: "Card Skimmer in the Wild"
 date: 2020-05-31
+counter: cardskim
 ---
 
 <p class="head1">
@@ -77,5 +78,3 @@ If you covered your fingers with another hand (like they tell you to
 but I didn't before this) 
 that would likely solve the problem completely.
 
-
-![Hits](https://hitcounter.pythonanywhere.com/count/tag.svg?url=https%3A%2F%2Fjanerob.com%2Fblog%2F2020%2F05%2F31%2Fcard-skimmer)
