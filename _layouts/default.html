@@ -3,6 +3,7 @@
 		<head>
 			<title>{{ page.title }}</title>
 			<link rel="stylesheet" type="text/css" href="/css/main.css">
+			<script async src="https://api.countapi.xyz/hit/janerob.com/hits_{{page.counter}}?callback=hitcounter"></script>
 		</head>
 		<body>
 			<nav>
@@ -22,7 +23,13 @@
 	    		<ul>
 	        		<li><a href="mailto:rob@janerob.com">email</a></li>
 	        		<li><a href="https://github.com/rob-miller">github.com/rob-miller</a></li>
+				<!-- why not work ? <li><span style="float: right" id="hits_{{page.title}}"></span></li> -->
 				</ul>
 			</footer>
+			<script>
+			function hitcounter(response) {
+			    document.getElementById('hits_{{page.counter}}').innerText = response.value;
+			}
+			</script>
 		</body>
 	</html>
